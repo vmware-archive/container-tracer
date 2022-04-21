@@ -17,7 +17,7 @@ e. Implement a script in python that reads the ftrace buffer because each tracin
 
 f. Verbs that will be needed: create,start, stop, status, destroy.
     
-    - Create: will create entry in the API database.
+    - Create: will enter a tracing resource in the API database.
     
     - Start: will run given traceCruncher script with given parameters. Also, start will run additional script from “e”.
     
@@ -25,4 +25,4 @@ f. Verbs that will be needed: create,start, stop, status, destroy.
     
     - Destroy: stop the ftrace session if it is not already stopped. Remove the tracing resource from the API database.
     
-    - Status: Look in the internal database and print the status metadata that is stored for the tracing resource.
+    - Status: look in the internal database and print the status metadata that is stored for the tracing resource.
