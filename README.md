@@ -1,4 +1,4 @@
-![ALT](https://gitlab.eng.vmware.com/opensource/tracecruncher-api/-/blob/main/Mind_Map.png)*Mind map*
+![Mind map diagram](https://gitlab.eng.vmware.com/opensource/tracecruncher-api/-/blob/main/Mind_Map.png)*Mind map*
 
 Components to work on for the traceCruncher API:
 
