@@ -17,12 +17,12 @@ e. Implement a script in python that reads the ftrace buffer because each tracin
 
 f. Verbs that will be needed: create,start, stop, status, destroy.
     
-    - Create: will enter a tracing resource in the API database.
+    - POST(Create): will enter a tracing resource in the API database.
     
-    - Start: will run given traceCruncher script with given parameters. Also, start will run additional script from “e”.
+    - PUT(Start): will run given traceCruncher logic with given parameters(payload). Also, start will run additional script from “e”.
     
-    - Stop: destroys ftrace tracing session. Ftrace tracing can be restarted with start. (decide if the script will run in the background?). Kill ftrace buffer reading script.
+    - PUT(Stop): destroys ftrace tracing session. Ftrace tracing can be restarted with start. (decide if the script will run in the background?). Kill ftrace buffer reading script.
     
-    - Destroy: stop the ftrace session if it is not already stopped. Remove the tracing resource from the API database.
+    - DELETE(Destroy): stop the ftrace session if it is not already stopped. Remove the tracing resource from the API database.
     
-    - Status: look in the internal database and print the status metadata that is stored for the tracing resource.
+    - GET(Status): look in the internal database and print the status metadata that is stored for the tracing resource.
