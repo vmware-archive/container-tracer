@@ -1,0 +1,55 @@
+openapi: 3.0.0
+info:
+  title: trace-cruncher
+  description: This is the trace-cruncher API.
+  version: 1.0.0
+servers:
+- url: https://localhost:8088/v1
+security:
+- BasicAuth: []
+paths:
+  /system_call:
+    get:
+      description: Returns a tracing result object of a system call trace of an event
+      operationId: system_call_get
+      responses:
+        "200":
+          description: Successful response
+        "404":
+          description: The specified tracing resource was not found
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+    put:
+      description: Update or create the specified tracing resource
+      operationId: system_call_put
+      responses:
+        "201":
+          description: Successful response
+        "401":
+          description: Unauthorized to start or stop trace
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+    post:
+      description: Creates a tracing resource
+      operationId: system_call_post
+      responses:
+        "201":
+          description: Successful response
+        "401":
+          description: Unauthorized to create tracing resource
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+    delete:
+      description: Remove the specified tracing resource
+      operationId: system_call_delete
+      responses:
+        "200":
+          description: Successfully removed tracing resource
+        "404":
+          description: The specified tracing resource was not found
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+components:
+  schemas: {}
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      x-basicInfoFunc: swagger_server.controllers.authorization_controller.check_BasicAuth
+
