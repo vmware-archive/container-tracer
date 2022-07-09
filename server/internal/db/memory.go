@@ -15,20 +15,33 @@ var Traces = []Trace{
 	{ID: "3", Container: "Gamma"},
 }
 
-// sample POST
-
 /*
+
+i) Sample POST request
+
 curl http://localhost:8080/traces \
     --include \
     --header "Content-Type: application/json" \
     --request "POST" \
     --data '{"id": "4","name": "Delta"}'
-*/
 
-// sample GET
 
-/*
+ii) Sample GET request
+
 curl http://localhost:8080/traces \
     --header "Content-Type: application/json" \
     --request "GET"
+
+
+iii) Sample GET by ID request (Status)
+
+curl http://localhost:8080/traces/2
+
+
+iv) Sample DELETE request
+
+curl http://localhost:8080/traces/3 \
+    --include \
+    --header "Content-Type: application/json" \
+    --request "DELETE"
 */

@@ -21,7 +21,42 @@ func SystemCallPost(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, newTrace)
 }
 
-// get all the the current traces and respond as JSON
+// get all the current traces and respond as JSON
 func SystemCallGet(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, db.Traces)
+}
+
+// get the status of a specific trace by ID
+func SystemCallStatus(c *gin.Context) {
+	id := c.Param("id")
+
+	// loop through the Traces slice to find a match
+	for _, a := range db.Traces {
+		if a.ID == id {
+			c.IndentedJSON(http.StatusOK, a)
+			return
+		}
+	}
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "trace not found"})
+}
+
+// remove/stop an existing trace using a Trace ID
+func SystemCallDelete(c *gin.Context) {
+	id := c.Param("id")
+
+	// loop through the Traces slice to find and remove the
+	// Trace with the specified ID
+	for i, a := range db.Traces {
+		if a.ID == id {
+			out := a
+			db.Traces = removeTrace(db.Traces, i)
+			c.IndentedJSON(http.StatusOK, out)
+		}
+	}
+}
+
+// this is a utility function to delete an element from the Traces slice
+func removeTrace(trace_arr []db.Trace, i int) []db.Trace {
+	trace_arr[i] = trace_arr[len(trace_arr)-1]
+	return trace_arr[:len(trace_arr)-1]
 }

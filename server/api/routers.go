@@ -8,7 +8,9 @@ import (
 func NewRouter() *gin.Engine {
 	router := gin.Default()
 	router.GET("/traces", SystemCallGet)
+	router.GET("/traces/:id", SystemCallStatus)
 	router.POST("/traces", SystemCallPost)
+	router.DELETE("/traces/:id", SystemCallDelete)
 
 	return router
 }
