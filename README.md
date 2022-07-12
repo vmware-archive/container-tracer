@@ -26,3 +26,14 @@ f. Verbs that will be needed: create,start, stop, status, destroy.
     - DELETE(Destroy): stop the ftrace session if it is not already stopped. Remove the tracing resource from the API database.
     
     - GET(Status): look in the internal database and print the status metadata that is stored for the tracing resource.
+
+## Docker
+
+tracecruncher-api is installable via Docker. The installation includes the trace-cruncher library.
+
+To install run the following from the `server` directory:
+    docker build . -t tracecruncher-api-image -f Dockerfile
+It's recommended to run the installer with the `--squash` flag in order to reduce the size of the final image.
+
+To run the container, use the `--priviliged` flag to give trace-cruncher kernel access and ensure you are publishing the container port:
+    docker run --privileged -p 8080:8080 --name tracecruncher-api -it tracecruncher-api-image
