@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	apiAddr = flag.String("addres", ":8080", "IP address and port in format IP:port, used for listening for incoming API requests.")
+	apiAddr = flag.String("address", ":8080", "IP address and port in format IP:port, used for listening for incoming API requests.")
 )
 
 func main() {
