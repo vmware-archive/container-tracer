@@ -3,9 +3,24 @@
 
 package tracer
 
+import (
+	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/condb"
+)
+
 type Tracer struct {
+	containers *condb.ContainersDb
 }
 
 func NewTracer() (*Tracer, error) {
-	return &Tracer{}, nil
+	var (
+		err error
+		c   *condb.ContainersDb
+	)
+	if c, err = condb.NewContainerDb(); err != nil {
+		return nil, err
+	}
+
+	return &Tracer{
+		containers: c,
+	}, nil
 }

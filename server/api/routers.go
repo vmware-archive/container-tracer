@@ -12,6 +12,7 @@ func NewRouter(t *tracer.Tracer) *gin.Engine {
 	router.GET("/traces/:id", t.SystemCallStatus)
 	router.POST("/traces", t.SystemCallPost)
 	router.DELETE("/traces/:id", t.SystemCallDelete)
+	router.GET("/containers", t.LocalContainersGet)
 
 	return router
 }

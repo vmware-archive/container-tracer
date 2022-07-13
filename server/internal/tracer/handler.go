@@ -1,6 +1,7 @@
 package tracer
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -59,4 +60,21 @@ func (t *Tracer) SystemCallDelete(c *gin.Context) {
 func removeTrace(trace_arr []db.Trace, i int) []db.Trace {
 	trace_arr[i] = trace_arr[len(trace_arr)-1]
 	return trace_arr[:len(trace_arr)-1]
+}
+
+// get all containers, running on the local node
+func (t *Tracer) LocalContainersGet(c *gin.Context) {
+	if e := t.containers.Scan(); e != nil {
+		c.IndentedJSON(http.StatusInternalServerError, e)
+	}
+	cdb := t.containers.Get()
+	if cdb != nil && len(*cdb) > 0 {
+		if j, e := json.Marshal(cdb); e != nil {
+			c.IndentedJSON(http.StatusInternalServerError, e)
+		} else {
+			c.IndentedJSON(http.StatusOK, string(j))
+		}
+	} else {
+		c.IndentedJSON(http.StatusOK, "{}")
+	}
 }
