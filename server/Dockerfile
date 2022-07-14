@@ -1,6 +1,11 @@
 FROM debian:bullseye
 # Install APT and pip dependencies
-RUN apt update && apt install build-essential git cmake libjson-c-dev libpython3-dev cython3 python3-numpy python3-pip flex valgrind binutils-dev pkg-config swig curl golang -y && pip3 install pkgconfig GitPython
+RUN	apt update \
+	&& apt install build-essential git cmake \
+		libjson-c-dev libpython3-dev cython3 \
+		python3-numpy python3-pip flex valgrind \
+		binutils-dev libzstd-dev libaudit-dev pkg-config swig curl golang -y \
+	&& pip3 install pkgconfig GitPython
 # Download the latest git-snapshot tool from the trace-cruncher GitHub
 # Then use it to download a snapshot of trace-cruncher and its dependencies (defined in repos)
 WORKDIR /build
@@ -29,7 +34,10 @@ RUN go build -o run-api ./cmd/tracer/
 # Remove build dependencies; run build with --squash to reduce image size
 WORKDIR /build
 RUN cd trace-cruncher && make clean
-RUN pip3 uninstall pkgconfig -y && apt remove build-essential cmake python3-pip libpython3-dev flex valgrind binutils-dev pkg-config swig curl golang -y && apt autoremove -y
+RUN pip3 uninstall pkgconfig -y \
+	&& apt remove build-essential cmake python3-pip libpython3-dev flex valgrind \
+	  binutils-dev libzstd-dev libaudit-dev pkg-config swig curl golang -y \
+	&& apt autoremove -y
 
 EXPOSE 8080/tcp
 ENTRYPOINT ["./trace-cruncher-api/run-api"]
