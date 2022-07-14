@@ -32,8 +32,12 @@ f. Verbs that will be needed: create,start, stop, status, destroy.
 tracecruncher-api is installable via Docker. The installation includes the trace-cruncher library.
 
 To install run the following from the `server` directory:
-    docker build . -t tracecruncher-api-image -f Dockerfile
+```
+docker build . -t tracecruncher-api-image -f Dockerfile
+```
 It's recommended to run the installer with the `--squash` flag in order to reduce the size of the final image.
 
 To run the container, use the `--priviliged` flag to give trace-cruncher kernel access and ensure you are publishing the container port:
-    docker run --privileged -p 8080:8080 --name tracecruncher-api -it tracecruncher-api-image
+```
+docker run --privileged -p 8080:8080 --name tracecruncher-api -it tracecruncher-api-image
+```
