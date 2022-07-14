@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (C) 2020 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
 
-package tracer
+package tracerctx
 
 import (
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/condb"

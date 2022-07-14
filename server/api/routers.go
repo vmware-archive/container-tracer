@@ -2,11 +2,11 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracer"
+	ctx "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracerctx"
 )
 
 // map request path to logic
-func NewRouter(t *tracer.Tracer) *gin.Engine {
+func NewRouter(t *ctx.Tracer) *gin.Engine {
 	router := gin.Default()
 	router.GET("/traces", t.SystemCallGet)
 	router.GET("/traces/:id", t.SystemCallStatus)

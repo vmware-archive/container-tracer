@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/api"
-	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracer"
+	ctx "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracerctx"
 )
 
 var (
@@ -17,10 +17,10 @@ func main() {
 	flag.Parse()
 
 	var (
-		t   *tracer.Tracer
+		t   *ctx.Tracer
 		err error
 	)
-	if t, err = tracer.NewTracer(); err != nil {
+	if t, err = ctx.NewTracer(); err != nil {
 		fmt.Println(err)
 		return
 	}
