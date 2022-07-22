@@ -31,6 +31,7 @@ WORKDIR trace-cruncher-api
 COPY api api
 COPY cmd cmd
 COPY internal internal
+COPY scripts scripts
 COPY go.mod go.sum ./
 RUN /usr/lib/go-1.18/bin/go build -o run-api ./cmd/tracer/
 
