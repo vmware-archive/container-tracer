@@ -29,9 +29,10 @@ def get_scripts():
 def run_script(name, arguments):
     signal.signal(signal.SIGUSR1, signal.SIG_IGN)
     for file in os.listdir(scripts_dir):
-      if name + "." in file:
+      if file.startswith(name + "."):
         try:
             output = subprocess.run(["./" + file] + arguments, capture_output=True, universal_newlines = True, start_new_session=True)
+            print(output.stdout)
         except KeyboardInterrupt:
             pass
     exit(0)
@@ -61,9 +62,9 @@ def reset_ftrace():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('-g', '--get-scripts', action='store_true', dest='get_all',
+    parser.add_argument('-g', '--get-all', action='store_true', dest='get_all',
                         help="Get available scripts")
-    parser.add_argument('-d', '--describe-script', nargs=1, dest='get_desc',
+    parser.add_argument('-d', '--describe', nargs=1, dest='get_desc',
                         help="Get description of a script")
     parser.add_argument('-c', '--clear', action='store_true', dest='reset',
                         help="Reset ftrace subsystem to default")
