@@ -78,3 +78,17 @@ func (t *Tracer) LocalContainersGet(c *gin.Context) {
 		c.IndentedJSON(http.StatusOK, "{}")
 	}
 }
+
+// get all trace hooks
+func (t *Tracer) TraceHooksGet(c *gin.Context) {
+	h := t.hooks.Get()
+	if h != nil && len(*h) > 0 {
+		if j, e := json.Marshal(h); e != nil {
+			c.IndentedJSON(http.StatusInternalServerError, e)
+		} else {
+			c.IndentedJSON(http.StatusOK, string(j))
+		}
+	} else {
+		c.IndentedJSON(http.StatusOK, "{}")
+	}
+}

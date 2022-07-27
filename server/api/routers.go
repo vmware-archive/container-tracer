@@ -13,6 +13,6 @@ func NewRouter(t *ctx.Tracer) *gin.Engine {
 	router.POST("/traces", t.SystemCallPost)
 	router.DELETE("/traces/:id", t.SystemCallDelete)
 	router.GET("/containers", t.LocalContainersGet)
-
+	router.GET("/trace-hooks", t.TraceHooksGet)
 	return router
 }
