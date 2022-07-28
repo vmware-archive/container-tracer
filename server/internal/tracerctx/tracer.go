@@ -5,22 +5,33 @@ package tracerctx
 
 import (
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/condb"
+	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracehook"
+)
+
+var (
+	traceHooksPath = "trace-hooks"
 )
 
 type Tracer struct {
 	containers *condb.ContainersDb
+	hooks      *tracehook.TraceHooks
 }
 
 func NewTracer() (*Tracer, error) {
 	var (
 		err error
 		c   *condb.ContainersDb
+		t   *tracehook.TraceHooks
 	)
 	if c, err = condb.NewContainerDb(); err != nil {
+		return nil, err
+	}
+	if t, err = tracehook.NewTraceHooksDb(&traceHooksPath); err != nil {
 		return nil, err
 	}
 
 	return &Tracer{
 		containers: c,
+		hooks:      t,
 	}, nil
 }
