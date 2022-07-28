@@ -21,7 +21,12 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+var (
+	procfsDefault = "/proc"
+)
+
 type containerProc struct {
+	path         string
 	condb        map[string]*container
 	top_utsns_fd int
 	top_utsns_id int
@@ -31,17 +36,18 @@ type containerProc struct {
 
 func getProcDiscover() (containersDiscover, error) {
 	ctr := containerProc{
+		path:  procfsDefault,
 		pids:  make([]int, 0),
 		condb: make(map[string]*container),
 	}
 
-	if id, err := getNSinum(1, "uts"); err != nil {
+	if id, err := ctr.getNSinum(1, "uts"); err != nil {
 		return nil, err
 	} else {
 		ctr.top_utsns_id = id
 	}
 
-	if f, err := os.Open("/proc/1/ns/uts"); err != nil {
+	if f, err := os.Open(fmt.Sprintf("%s/1/ns/uts", ctr.path)); err != nil {
 		return nil, err
 	} else {
 		ctr.top_utsns_fd = int(f.Fd())
@@ -50,8 +56,8 @@ func getProcDiscover() (containersDiscover, error) {
 	return ctr, nil
 }
 
-func getNSinum(pid int, ns string) (int, error) {
-	if name, err := os.Readlink(fmt.Sprintf("/proc/%d/ns/%s", pid, ns)); err == nil {
+func (c *containerProc) getNSinum(pid int, ns string) (int, error) {
+	if name, err := os.Readlink(fmt.Sprintf("%s/%d/ns/%s", c.path, pid, ns)); err == nil {
 		f := func(c rune) bool {
 			return c == '[' || c == ']'
 		}
@@ -66,7 +72,7 @@ func getNSinum(pid int, ns string) (int, error) {
 }
 
 func (c *containerProc) nsGetContName(pid int) (*string, error) {
-	if f, err := os.Open(fmt.Sprintf("/proc/%d/ns/uts", pid)); err == nil {
+	if f, err := os.Open(fmt.Sprintf("%s/%d/ns/uts", c.path, pid)); err == nil {
 		defer f.Close()
 		if err := unix.Setns(int(f.Fd()), unix.CLONE_NEWUTS); err != nil {
 			return nil, err
@@ -88,14 +94,14 @@ func (c *containerProc) nsGetContName(pid int) (*string, error) {
 	return &name, nil
 }
 
-func compareNS(pid1, pid2 int, ns string) (bool, error) {
+func (c *containerProc) compareNS(pid1, pid2 int, ns string) (bool, error) {
 	var ns1, ns2 int
 	var err error
 
-	if ns1, err = getNSinum(pid1, ns); err != nil {
+	if ns1, err = c.getNSinum(pid1, ns); err != nil {
 		return false, err
 	}
-	if ns1, err = getNSinum(pid1, ns); err != nil {
+	if ns1, err = c.getNSinum(pid1, ns); err != nil {
 		return false, err
 	}
 
@@ -104,14 +110,14 @@ func compareNS(pid1, pid2 int, ns string) (bool, error) {
 
 func (c *containerProc) getContainerInfo(ppid, pid int) error {
 	// Check if the given PID is in different pid name space from its parrent
-	if b, err := compareNS(ppid, pid, "pid"); err != nil {
+	if b, err := c.compareNS(ppid, pid, "pid"); err != nil {
 		return err
 	} else if b {
 		return nil
 	}
 
 	// Check if the PID is in different uts name space from process 1
-	if uts, err := getNSinum(pid, "uts"); err != nil {
+	if uts, err := c.getNSinum(pid, "uts"); err != nil {
 		return err
 	} else if uts == c.top_utsns_id {
 		return nil
@@ -140,7 +146,7 @@ func (c *containerProc) getContainerInfo(ppid, pid int) error {
 }
 
 func (c *containerProc) getChildrenPids(pid int) error {
-	if file, err := os.Open(fmt.Sprintf("/proc/%d/task/%d/children", c.ppid, pid)); err == nil {
+	if file, err := os.Open(fmt.Sprintf("%s/%d/task/%d/children", c.path, c.ppid, pid)); err == nil {
 		defer file.Close()
 		scan := bufio.NewScanner(file)
 		scan.Split(bufio.ScanWords)
@@ -177,7 +183,7 @@ func (c *containerProc) getChildren(pid int, threads bool) error {
 	if !threads {
 		return nil
 	}
-	if err := filepath.WalkDir(fmt.Sprintf("/proc/%d/task/", c.ppid), c.procWalk); err != nil {
+	if err := filepath.WalkDir(fmt.Sprintf("%s/%d/task/", c.path, c.ppid), c.procWalk); err != nil {
 		return err
 	}
 
