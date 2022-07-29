@@ -21,11 +21,15 @@ type ContainersDb struct {
 	node       string
 }
 
-func getContDiscover() (containersDiscover, error) {
+func getContDiscover(criPath *string, forceProcfs *bool) (containersDiscover, error) {
 	var d containersDiscover
 	var err error
 
-	if d, err = getCriDiscover(); err == nil {
+	if forceProcfs != nil && *forceProcfs {
+		return getProcDiscover()
+	}
+
+	if d, err = getCriDiscover(criPath); err == nil {
 		return d, err
 	} else if d, err = getProcDiscover(); err == nil {
 		return d, err
@@ -34,9 +38,9 @@ func getContDiscover() (containersDiscover, error) {
 	return nil, err
 }
 
-func NewContainerDb() (*ContainersDb, error) {
+func NewContainerDb(criPath *string, forceProcfs *bool) (*ContainersDb, error) {
 
-	if d, err := getContDiscover(); err == nil {
+	if d, err := getContDiscover(criPath, forceProcfs); err == nil {
 		return &ContainersDb{
 			discover: d,
 		}, nil

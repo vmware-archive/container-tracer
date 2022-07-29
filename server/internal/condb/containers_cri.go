@@ -34,7 +34,7 @@ type containerCriInfo struct {
 func (c *containerCri) criConnect(endpoint *string) error {
 	timeout := 100 * time.Millisecond
 
-	if endpoint != nil {
+	if endpoint != nil && *endpoint != "" {
 		if svc, err := remote.NewRemoteRuntimeService(*endpoint, timeout); err != nil {
 			return err
 		} else {
@@ -54,14 +54,14 @@ func (c *containerCri) criConnect(endpoint *string) error {
 	return fmt.Errorf("Cannot connect to CRI endpoint")
 }
 
-func getCriDiscover() (containersDiscover, error) {
+func getCriDiscover(endpoint *string) (containersDiscover, error) {
 
 	ctr := containerCri{
 		pids:  make([]int, 0),
 		condb: make(map[string]*container),
 	}
 
-	if err := ctr.criConnect(nil); err != nil {
+	if err := ctr.criConnect(endpoint); err != nil {
 		return nil, err
 	}
 

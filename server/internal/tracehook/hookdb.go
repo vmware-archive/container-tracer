@@ -13,6 +13,7 @@ import (
 
 var (
 	managerPrefix = "manager."
+	defaultPath   = "trace-hooks"
 )
 
 type TraceHook struct {
@@ -72,7 +73,7 @@ func (c *TraceHooks) scanTraceHooks(dir *string) error {
 	var allOut bytes.Buffer
 	all.Stdout = &allOut
 	if e = all.Run(); e != nil {
-		return e
+		return nil
 	}
 
 	for _, s := range strings.Fields(allOut.String()) {
@@ -122,6 +123,10 @@ func (c *TraceHooks) tracerHooksDiscover() error {
 func NewTraceHooksDb(path *string) (*TraceHooks, error) {
 	db := TraceHooks{
 		topDir: path,
+	}
+
+	if db.topDir == nil || *db.topDir == "" {
+		db.topDir = &defaultPath
 	}
 
 	if e := db.tracerHooksDiscover(); e != nil {
