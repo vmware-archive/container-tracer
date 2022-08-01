@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (C) 2020 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
 
-package condb
+package pods
 
 import (
 	"encoding/json"
@@ -21,24 +21,24 @@ var knownCriEndpoints = [...]string{
 	"unix:///run/crio/crio.sock",
 }
 
-type containerCri struct {
-	api   criapi.RuntimeService
-	pids  []int
-	condb map[string]*container
+type podCri struct {
+	api  criapi.RuntimeService
+	pids []int
+	podb map[string]*pod
 }
 
-type containerCriInfo struct {
+type podCriInfo struct {
 	Pid int `json:"Pid"`
 }
 
-func (c *containerCri) criConnect(endpoint *string) error {
+func (p *podCri) criConnect(endpoint *string) error {
 	timeout := 100 * time.Millisecond
 
 	if endpoint != nil && *endpoint != "" {
 		if svc, err := remote.NewRemoteRuntimeService(*endpoint, timeout); err != nil {
 			return err
 		} else {
-			c.api = svc
+			p.api = svc
 		}
 		return nil
 	}
@@ -46,7 +46,7 @@ func (c *containerCri) criConnect(endpoint *string) error {
 	for _, ep := range knownCriEndpoints {
 		svc, err := remote.NewRemoteRuntimeService(ep, timeout)
 		if err == nil {
-			c.api = svc
+			p.api = svc
 			return nil
 		}
 	}
@@ -54,11 +54,11 @@ func (c *containerCri) criConnect(endpoint *string) error {
 	return fmt.Errorf("Cannot connect to CRI endpoint")
 }
 
-func getCriDiscover(endpoint *string) (containersDiscover, error) {
+func getCriDiscover(endpoint *string) (podsDiscover, error) {
 
-	ctr := containerCri{
-		pids:  make([]int, 0),
-		condb: make(map[string]*container),
+	ctr := podCri{
+		pids: make([]int, 0),
+		podb: make(map[string]*pod),
 	}
 
 	if err := ctr.criConnect(endpoint); err != nil {
@@ -68,18 +68,18 @@ func getCriDiscover(endpoint *string) (containersDiscover, error) {
 	return ctr, nil
 }
 
-func (c *containerCri) getContainerInfo(id, pod string) error {
+func (p *podCri) getPodInfo(id, pname string) error {
 
-	if _, ok := c.condb[pod]; !ok {
-		c.condb[pod] = &container{}
+	if _, ok := p.podb[pname]; !ok {
+		p.podb[pname] = &pod{}
 	}
 
-	if s, e := c.api.ContainerStatus(id, true); e == nil {
+	if s, e := p.api.ContainerStatus(id, true); e == nil {
 		i := s.GetInfo()
 		if v, ok := i["info"]; ok {
-			info := containerCriInfo{}
+			info := podCriInfo{}
 			if err := json.Unmarshal([]byte(v), &info); err == nil {
-				c.condb[pod].Pids = append(c.condb[pod].Pids, info.Pid)
+				p.podb[pname].Pids = append(p.podb[pname].Pids, info.Pid)
 			}
 		}
 	} else {
@@ -89,7 +89,7 @@ func (c *containerCri) getContainerInfo(id, pod string) error {
 	return nil
 }
 
-func (c containerCri) contScan() (*map[string]*container, error) {
+func (p podCri) podScan() (*map[string]*pod, error) {
 	// Filter only the running containers
 	f := &pbuf.ContainerFilter{
 		State: &pbuf.ContainerStateValue{
@@ -97,17 +97,17 @@ func (c containerCri) contScan() (*map[string]*container, error) {
 		},
 	}
 	// Get list of all running containers
-	r, err := c.api.ListContainers(f)
+	r, err := p.api.ListContainers(f)
 	if err != nil {
 		return nil, err
 	}
-	// Reset the containers databse
-	c.condb = make(map[string]*container)
+	// Reset the pods databse
+	p.podb = make(map[string]*pod)
 	for _, cr := range r {
 		if podName, ok := cr.Labels[ktype.KubernetesPodNameLabel]; ok {
-			c.getContainerInfo(cr.Id, podName)
+			p.getPodInfo(cr.Id, podName)
 		}
 	}
 
-	return &c.condb, nil
+	return &p.podb, nil
 }

@@ -62,12 +62,12 @@ func removeTrace(trace_arr []db.Trace, i int) []db.Trace {
 	return trace_arr[:len(trace_arr)-1]
 }
 
-// get all containers, running on the local node
-func (t *Tracer) LocalContainersGet(c *gin.Context) {
-	if e := t.containers.Scan(); e != nil {
+// get all pods, running on the local node
+func (t *Tracer) LocalPodsGet(c *gin.Context) {
+	if e := t.pods.Scan(); e != nil {
 		c.IndentedJSON(http.StatusInternalServerError, e)
 	}
-	cdb := t.containers.Get()
+	cdb := t.pods.Get()
 	if cdb != nil && len(*cdb) > 0 {
 		if j, e := json.Marshal(cdb); e != nil {
 			c.IndentedJSON(http.StatusInternalServerError, e)

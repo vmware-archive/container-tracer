@@ -4,13 +4,13 @@
 package tracerctx
 
 import (
-	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/condb"
+	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/pods"
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracehook"
 )
 
 type Tracer struct {
-	containers *condb.ContainersDb
-	hooks      *tracehook.TraceHooks
+	pods  *pods.PodDb
+	hooks *tracehook.TraceHooks
 }
 
 type TracerConfig struct {
@@ -23,11 +23,11 @@ type TracerConfig struct {
 func NewTracer(cfg *TracerConfig) (*Tracer, error) {
 	var (
 		err error
-		c   *condb.ContainersDb
+		p   *pods.PodDb
 		t   *tracehook.TraceHooks
 	)
 
-	if c, err = condb.NewContainerDb(cfg.Cri, cfg.ForceProc); err != nil {
+	if p, err = pods.NewPodDb(cfg.Cri, cfg.ForceProc); err != nil {
 		return nil, err
 	}
 	if t, err = tracehook.NewTraceHooksDb(cfg.Hooks); err != nil {
@@ -35,7 +35,7 @@ func NewTracer(cfg *TracerConfig) (*Tracer, error) {
 	}
 
 	return &Tracer{
-		containers: c,
-		hooks:      t,
+		pods:  p,
+		hooks: t,
 	}, nil
 }

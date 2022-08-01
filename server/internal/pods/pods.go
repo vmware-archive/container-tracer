@@ -1,28 +1,28 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2020 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
+// Copyright (C) 2022 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
 
-package condb
+package pods
 
 import (
 	"fmt"
 )
 
-type containersDiscover interface {
-	contScan() (*map[string]*container, error)
+type podsDiscover interface {
+	podScan() (*map[string]*pod, error)
 }
 
-type container struct {
+type pod struct {
 	Pids []int `json:"Tasks"`
 }
 
-type ContainersDb struct {
-	discover   containersDiscover
-	containers *map[string]*container
-	node       string
+type PodDb struct {
+	discover podsDiscover
+	pods     *map[string]*pod
+	node     string
 }
 
-func getContDiscover(criPath *string, forceProcfs *bool) (containersDiscover, error) {
-	var d containersDiscover
+func getPodDiscover(criPath *string, forceProcfs *bool) (podsDiscover, error) {
+	var d podsDiscover
 	var err error
 
 	if forceProcfs != nil && *forceProcfs {
@@ -38,10 +38,10 @@ func getContDiscover(criPath *string, forceProcfs *bool) (containersDiscover, er
 	return nil, err
 }
 
-func NewContainerDb(criPath *string, forceProcfs *bool) (*ContainersDb, error) {
+func NewPodDb(criPath *string, forceProcfs *bool) (*PodDb, error) {
 
-	if d, err := getContDiscover(criPath, forceProcfs); err == nil {
-		return &ContainersDb{
+	if d, err := getPodDiscover(criPath, forceProcfs); err == nil {
+		return &PodDb{
 			discover: d,
 		}, nil
 	} else {
@@ -49,9 +49,9 @@ func NewContainerDb(criPath *string, forceProcfs *bool) (*ContainersDb, error) {
 	}
 }
 
-func (c *ContainersDb) Scan() error {
-	if cdb, err := c.discover.contScan(); err == nil {
-		c.containers = cdb
+func (p *PodDb) Scan() error {
+	if cdb, err := p.discover.podScan(); err == nil {
+		p.pods = cdb
 	} else {
 		return err
 	}
@@ -59,22 +59,22 @@ func (c *ContainersDb) Scan() error {
 	return nil
 }
 
-func (c *ContainersDb) Count() int {
-	if c.containers == nil {
+func (p *PodDb) Count() int {
+	if p.pods == nil {
 		return 0
 	}
-	return len(*c.containers)
+	return len(*p.pods)
 }
 
-func (c *ContainersDb) Print() {
-	if c.containers == nil {
+func (p *PodDb) Print() {
+	if p.pods == nil {
 		return
 	}
-	for k, v := range *c.containers {
+	for k, v := range *p.pods {
 		fmt.Println(k, *v)
 	}
 }
 
-func (c *ContainersDb) Get() *map[string]*container {
-	return c.containers
+func (p *PodDb) Get() *map[string]*pod {
+	return p.pods
 }
