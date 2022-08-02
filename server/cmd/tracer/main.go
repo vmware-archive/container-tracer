@@ -83,6 +83,7 @@ func main() {
 
 	cfg, addr := getConfig()
 	if t, err = ctx.NewTracer(cfg); err != nil {
+		log.Fatal("Failed to create new tracer: ", err)
 		return
 	}
 
