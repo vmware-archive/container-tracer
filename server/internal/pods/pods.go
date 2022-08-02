@@ -11,8 +11,12 @@ type podsDiscover interface {
 	podScan() (*map[string]*pod, error)
 }
 
+type container struct {
+	Tasks []int `json:"Tasks"`
+}
+
 type pod struct {
-	Pids []int `json:"Tasks"`
+	Containers map[string]*container
 }
 
 type PodDb struct {

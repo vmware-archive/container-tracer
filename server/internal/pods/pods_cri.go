@@ -23,7 +23,6 @@ var knownCriEndpoints = [...]string{
 
 type podCri struct {
 	api  criapi.RuntimeService
-	pids []int
 	podb map[string]*pod
 }
 
@@ -57,7 +56,6 @@ func (p *podCri) criConnect(endpoint *string) error {
 func getCriDiscover(endpoint *string) (podsDiscover, error) {
 
 	ctr := podCri{
-		pids: make([]int, 0),
 		podb: make(map[string]*pod),
 	}
 
@@ -68,18 +66,24 @@ func getCriDiscover(endpoint *string) (podsDiscover, error) {
 	return ctr, nil
 }
 
-func (p *podCri) getPodInfo(id, pname string) error {
+func (p *podCri) getPodInfo(cinfo *pbuf.Container, pname *string) error {
 
-	if _, ok := p.podb[pname]; !ok {
-		p.podb[pname] = &pod{}
+	if _, ok := p.podb[*pname]; !ok {
+		p.podb[*pname] = &pod{
+			Containers: make(map[string]*container),
+		}
 	}
+	if _, ok := p.podb[*pname].Containers[cinfo.Metadata.Name]; !ok {
+		p.podb[*pname].Containers[cinfo.Metadata.Name] = &container{}
+	}
+	cr := p.podb[*pname].Containers[cinfo.Metadata.Name]
 
-	if s, e := p.api.ContainerStatus(id, true); e == nil {
+	if s, e := p.api.ContainerStatus(cinfo.Id, true); e == nil {
 		i := s.GetInfo()
 		if v, ok := i["info"]; ok {
 			info := podCriInfo{}
 			if err := json.Unmarshal([]byte(v), &info); err == nil {
-				p.podb[pname].Pids = append(p.podb[pname].Pids, info.Pid)
+				cr.Tasks = append(cr.Tasks, info.Pid)
 			}
 		}
 	} else {
@@ -105,7 +109,7 @@ func (p podCri) podScan() (*map[string]*pod, error) {
 	p.podb = make(map[string]*pod)
 	for _, cr := range r {
 		if podName, ok := cr.Labels[ktype.KubernetesPodNameLabel]; ok {
-			p.getPodInfo(cr.Id, podName)
+			p.getPodInfo(cr, &podName)
 		}
 	}
 

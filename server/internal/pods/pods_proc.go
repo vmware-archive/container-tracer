@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2020 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
+// Copyright (C) 2022 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
 
 /*
  Discover containers running on the local node, using information from the /proc file system
  This logic was originally implemented in python by Yordan Karadzhov <y.karadz@gmail.com>
+
+ Using /proc file system has limitations in Kubernetes context. I couldn't find reliable way to get
+ Pod -> Containers relation, so the logic considers that all tasks inside a Pod are part of a single
+ container with name "unknown".
+
 */
 
 package pods
@@ -22,7 +27,8 @@ import (
 )
 
 var (
-	procfsDefault = "/proc"
+	procfsDefault    = "/proc"
+	defaultContainer = "unknown"
 )
 
 type podProc struct {
@@ -123,20 +129,26 @@ func (p *podProc) getPodInfo(ppid, pid int) error {
 		return nil
 	}
 
-	// Get the name of the container and all children of the given PID
+	// Get the name of the pod and all children of the given PID
 	if name, err := p.nsGetPodName(pid); err == nil {
 		if v, ok := p.podb[*name]; ok {
-			v.Pids = append(v.Pids, pid)
+			t := v.Containers[defaultContainer].Tasks
+			t = append(t, pid)
 		} else {
 			p.podb[*name] = &pod{
-				Pids: []int{pid},
+				Containers: map[string]*container{
+					defaultContainer: &container{
+						Tasks: []int{pid},
+					},
+				},
 			}
 		}
 		if err := p.getChildren(pid, true); err != nil {
 			return err
 		}
 		if len(p.pids) > 0 {
-			p.podb[*name].Pids = append(p.podb[*name].Pids, p.pids...)
+			t := p.podb[*name].Containers[defaultContainer].Tasks
+			t = append(t, p.pids...)
 		}
 	} else {
 		return err
@@ -215,9 +227,11 @@ func (p *podProc) walkChildren(ppid, pid int) error {
 func (p podProc) podScan() (*map[string]*pod, error) {
 	// Reset the pods databse
 	p.podb = make(map[string]*pod)
+
 	// Dsicover the children of process 1
 	if err := p.walkChildren(0, 1); err != nil {
 		return nil, err
 	}
+
 	return &p.podb, nil
 }
