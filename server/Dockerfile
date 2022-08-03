@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# Copyright 2022 VMware Inc, June Knauth (VMware) <june.knauth@gmail.com>
+
 FROM debian:bullseye
 # Add bulleye-backports for golang 1.18
 RUN echo "deb http://deb.debian.org/debian bullseye-backports main" >> /etc/apt/sources.list

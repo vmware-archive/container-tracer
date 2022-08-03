@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-
 """
-SPDX-License-Identifier: CC-BY-4.0
-
+SPDX-License-Identifier: GPL-2.0-or-later
 Copyright 2022 VMware Inc, Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
+
+Manager of trace helper programs located in the same directory:
+ - auto discovers available trace programs
+ - gets their description and arguments
+ - run a trace program
 """
 
 import os, subprocess, signal

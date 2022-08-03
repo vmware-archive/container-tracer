@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-SPDX-License-Identifier: CC-BY-4.0
+SPDX-License-Identifier: GPL-2.0-or-later
 
 Copyright 2022 VMware Inc, Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
 """

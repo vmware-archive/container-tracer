@@ -1,6 +1,9 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2022 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
-
+// SPDX-License-Identifier: GPL-2.0-or-later
+/*
+ * Copyright (C) 2022 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
+ *
+ * Internal in-memory database with all pods and containers running on the local node.
+ */
 package pods
 
 import (

@@ -1,3 +1,10 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+/*
+ * Copyright (C) 2022 VMware, Inc. Enyinna Ochulor <eochulor@vmware.com>
+ * Copyright (C) 2022 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
+ *
+ * Backend handlers of the tracer REST API.
+ */
 package tracerctx
 
 import (

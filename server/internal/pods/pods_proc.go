@@ -1,16 +1,14 @@
-// SPDX-License-Identifier: Apache-2.0
-// Copyright (C) 2022 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
-
+// SPDX-License-Identifier: GPL-2.0-or-later
 /*
- Discover containers running on the local node, using information from the /proc file system
- This logic was originally implemented in python by Yordan Karadzhov <y.karadz@gmail.com>
-
- Using /proc file system has limitations in Kubernetes context. I couldn't find reliable way to get
- Pod -> Containers relation, so the logic considers that all tasks inside a Pod are part of a single
- container with name "unknown".
-
-*/
-
+ * Copyright (C) 2022 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
+ *
+ * Discover containers running on the local node, using information from the /proc file system.
+ * This logic was originally implemented in python by Yordan Karadzhov <y.karadz@gmail.com>
+ *
+ * Using /proc file system has limitations in Kubernetes context. I couldn't find reliable way to get
+ * Pod -> Containers relation, so the logic considers that all tasks inside a Pod are part of a single
+ * container with name "unknown".
+ */
 package pods
 
 import (

@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+/*
+ * Copyright (C) 2022 VMware, Inc. Enyinna Ochulor <eochulor@vmware.com>
+ * Copyright (C) 2022 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
+ *
+ */
 package main
 
 import (
@@ -11,6 +17,8 @@ import (
 )
 
 var (
+	description = "Trace containers running on the local node."
+
 	envAddress     = "TRACER_API_ADDRESS"
 	envCri         = "TRACER_CRI_ENDPOINT"
 	envHooks       = "TRACER_HOOKS"
@@ -19,6 +27,12 @@ var (
 	defAddress     = ":8080"
 	defHooks       = "trace-hooks"
 )
+
+func usage() {
+	w := flag.CommandLine.Output()
+	fmt.Fprintf(w, "%s: %s \n\n", os.Args[0], description)
+	flag.PrintDefaults()
+}
 
 func getConfig() (*ctx.TracerConfig, *string) {
 	cfg := ctx.TracerConfig{}
@@ -80,6 +94,8 @@ func main() {
 		t   *ctx.Tracer
 		err error
 	)
+
+	flag.Usage = usage
 
 	cfg, addr := getConfig()
 	if t, err = ctx.NewTracer(cfg); err != nil {
