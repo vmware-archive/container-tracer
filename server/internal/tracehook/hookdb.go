@@ -8,6 +8,7 @@ package tracehook
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -20,6 +21,8 @@ var (
 )
 
 type TraceHook struct {
+	Name        string
+	manager     *hookManager
 	Description []string `json:"Description"`
 }
 
@@ -31,6 +34,15 @@ type hookManager struct {
 type TraceHooks struct {
 	topDir   *string
 	managers map[string]*hookManager
+}
+
+func (c *TraceHooks) GetHook(name *string) (*TraceHook, error) {
+	for _, h := range c.managers {
+		if tr, ok := h.Tracers[*name]; ok {
+			return tr, nil
+		}
+	}
+	return nil, fmt.Errorf("Cannot find trace hook %s", name)
 }
 
 func (c *TraceHooks) scanManagers(dir *string) error {
@@ -94,6 +106,8 @@ func (c *TraceHooks) scanTraceHooks(dir *string) error {
 			}
 		}
 		c.managers[*dir].Tracers[s] = &TraceHook{
+			Name:        s,
+			manager:     c.managers[*dir],
 			Description: dstrip,
 		}
 	}
