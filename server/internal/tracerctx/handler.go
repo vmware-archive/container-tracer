@@ -8,7 +8,6 @@
 package tracerctx
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -72,17 +71,13 @@ func removeTrace(trace_arr []db.Trace, i int) []db.Trace {
 // get all pods, running on the local node
 func (t *Tracer) LocalPodsGet(c *gin.Context) {
 	if e := t.pods.Scan(); e != nil {
-		c.IndentedJSON(http.StatusInternalServerError, e)
+		c.JSON(http.StatusInternalServerError, e)
 	}
 	cdb := t.pods.Get()
 	if cdb != nil && len(*cdb) > 0 {
-		if j, e := json.Marshal(cdb); e != nil {
-			c.IndentedJSON(http.StatusInternalServerError, e)
-		} else {
-			c.IndentedJSON(http.StatusOK, string(j))
-		}
+		c.JSON(http.StatusOK, cdb)
 	} else {
-		c.IndentedJSON(http.StatusOK, "{}")
+		c.JSON(http.StatusOK, "{}")
 	}
 }
 
@@ -90,12 +85,8 @@ func (t *Tracer) LocalPodsGet(c *gin.Context) {
 func (t *Tracer) TraceHooksGet(c *gin.Context) {
 	h := t.hooks.Get()
 	if h != nil && len(*h) > 0 {
-		if j, e := json.Marshal(h); e != nil {
-			c.IndentedJSON(http.StatusInternalServerError, e)
-		} else {
-			c.IndentedJSON(http.StatusOK, string(j))
-		}
+		c.JSON(http.StatusOK, h)
 	} else {
-		c.IndentedJSON(http.StatusOK, "{}")
+		c.JSON(http.StatusOK, "{}")
 	}
 }
