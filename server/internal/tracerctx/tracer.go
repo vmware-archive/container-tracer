@@ -7,13 +7,16 @@
 package tracerctx
 
 import (
+	"fmt"
+
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/pods"
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracehook"
 )
 
 type Tracer struct {
-	pods  *pods.PodDb
-	hooks *tracehook.TraceHooks
+	pods     *pods.PodDb
+	hooks    *tracehook.TraceHooks
+	sessions *sessionDb
 }
 
 type TracerConfig struct {
@@ -24,21 +27,19 @@ type TracerConfig struct {
 }
 
 func NewTracer(cfg *TracerConfig) (*Tracer, error) {
-	var (
-		err error
-		p   *pods.PodDb
-		t   *tracehook.TraceHooks
-	)
+	var err error
+	tr := Tracer{}
 
-	if p, err = pods.NewPodDb(cfg.Cri, cfg.ForceProc); err != nil {
+	if tr.pods, err = pods.NewPodDb(cfg.Cri, cfg.ForceProc); err != nil {
 		return nil, err
 	}
-	if t, err = tracehook.NewTraceHooksDb(cfg.Hooks); err != nil {
+	if tr.hooks, err = tracehook.NewTraceHooksDb(cfg.Hooks); err != nil {
 		return nil, err
 	}
 
-	return &Tracer{
-		pods:  p,
-		hooks: t,
-	}, nil
+	if tr.sessions = newSessionDb(); tr.sessions == nil {
+		return nil, fmt.Errorf("Failed to create new session database")
+	}
+
+	return &tr, nil
 }
