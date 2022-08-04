@@ -8,24 +8,95 @@ package pods
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
 )
 
 type podsDiscover interface {
 	podScan() (*map[string]*pod, error)
 }
 
-type container struct {
-	Tasks []int `json:"Tasks"`
+type Container struct {
+	Id, Pod *string
+	Tasks   []int `json:"Tasks"`
 }
 
 type pod struct {
-	Containers map[string]*container
+	Containers map[string]*Container
 }
 
 type PodDb struct {
 	discover podsDiscover
 	pods     *map[string]*pod
 	node     string
+}
+
+func hasWildcard(pattern *string) bool {
+	if strings.Contains(*pattern, "*") {
+		return true
+	}
+	if strings.Contains(*pattern, "?") {
+		return true
+	}
+	return false
+}
+
+func matchName(pattern, name *string) bool {
+	if !hasWildcard(pattern) {
+		if pattern == name {
+			return true
+		}
+		return false
+	}
+	if *pattern == "*" {
+		return true
+	}
+
+	m, _ := filepath.Match(*pattern, *name)
+	return m
+}
+
+func getContainersFromPod(p *pod, containerName *string) []*Container {
+
+	res := []*Container{}
+
+	if !hasWildcard(containerName) {
+		if c, ok := p.Containers[*containerName]; ok {
+			res = append(res, c)
+		}
+		return res
+	}
+
+	for cn, c := range p.Containers {
+		if !matchName(containerName, &cn) {
+			continue
+		}
+		res = append(res, c)
+	}
+
+	return res
+}
+
+func (p *PodDb) GetContainers(podName, containerName *string) []*Container {
+
+	res := []*Container{}
+
+	if !hasWildcard(podName) {
+		if pd, ok := (*p.pods)[*podName]; ok {
+			return getContainersFromPod(pd, containerName)
+		}
+		return res
+	}
+
+	for pn, pd := range *p.pods {
+		if !matchName(podName, &pn) {
+			continue
+		}
+		r := getContainersFromPod(pd, containerName)
+		res = append(res, r...)
+	}
+
+	return res
 }
 
 func getPodDiscover(criPath *string, forceProcfs *bool) (podsDiscover, error) {
@@ -48,9 +119,11 @@ func getPodDiscover(criPath *string, forceProcfs *bool) (podsDiscover, error) {
 func NewPodDb(criPath *string, forceProcfs *bool) (*PodDb, error) {
 
 	if d, err := getPodDiscover(criPath, forceProcfs); err == nil {
-		return &PodDb{
+		db := &PodDb{
 			discover: d,
-		}, nil
+		}
+		db.Scan()
+		return db, nil
 	} else {
 		return nil, err
 	}

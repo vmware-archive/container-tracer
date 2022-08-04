@@ -73,11 +73,14 @@ func (p *podCri) getPodInfo(cinfo *pbuf.Container, pname *string) error {
 
 	if _, ok := p.podb[*pname]; !ok {
 		p.podb[*pname] = &pod{
-			Containers: make(map[string]*container),
+			Containers: make(map[string]*Container),
 		}
 	}
 	if _, ok := p.podb[*pname].Containers[cinfo.Metadata.Name]; !ok {
-		p.podb[*pname].Containers[cinfo.Metadata.Name] = &container{}
+		p.podb[*pname].Containers[cinfo.Metadata.Name] = &Container{
+			Id:  &cinfo.Metadata.Name,
+			Pod: pname,
+		}
 	}
 	cr := p.podb[*pname].Containers[cinfo.Metadata.Name]
 

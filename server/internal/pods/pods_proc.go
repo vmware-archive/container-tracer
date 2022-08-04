@@ -134,8 +134,10 @@ func (p *podProc) getPodInfo(ppid, pid int) error {
 			t = append(t, pid)
 		} else {
 			p.podb[*name] = &pod{
-				Containers: map[string]*container{
-					defaultContainer: &container{
+				Containers: map[string]*Container{
+					defaultContainer: &Container{
+						Id:    &defaultContainer,
+						Pod:   name,
 						Tasks: []int{pid},
 					},
 				},
