@@ -82,11 +82,10 @@ func (t *Tracer) TraceSessionPost(c *gin.Context) {
 		c.JSON(http.StatusNotFound, err)
 	} else if info, err := t.getSessionInfo(id); err == nil {
 		resp = *info
+		c.JSON(http.StatusOK, resp)
 	} else {
 		c.JSON(http.StatusInternalServerError, err.Error())
 	}
-
-	c.JSON(http.StatusOK, resp)
 }
 
 // delete a trace session
