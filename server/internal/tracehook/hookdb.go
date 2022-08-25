@@ -150,9 +150,20 @@ func NewTraceHooksDb(path *string) (*TraceHooks, error) {
 		return nil, e
 	}
 
+	db.ResetAll()
+
 	return &db, nil
 }
 
 func (c *TraceHooks) Get() *map[string]*hookManager {
 	return &c.managers
+}
+
+/* Reset all tracing subsystems */
+func (h *TraceHooks) ResetAll() {
+	for d, m := range h.managers {
+		cmd := exec.Command("./"+m.fexec, "--clear")
+		cmd.Dir = d
+		cmd.Run()
+	}
 }
