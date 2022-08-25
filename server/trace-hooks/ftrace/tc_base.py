@@ -58,10 +58,12 @@ class tracer:
             ft.set_ftrace_pid(pid=self.args.parent, instance=self.instance)
         ft.tracing_ON(instance=self.instance)
 
+        wait_pids = []
         if self.args.pids:
-            ft.wait(signals=['SIGUSR1', 'SIGINT'], pids=self.args.pids, time=self.duration)
-        else:
-            ft.wait(signals=['SIGUSR1', 'SIGINT'], pids=self.args.parent, time=self.duration)
+            wait_pids.extend(self.args.pids)
+        if self.args.parent:
+            wait_pids.extend(self.args.parent)
+        ft.wait(signals=['SIGUSR1', 'SIGINT'], pids=wait_pids, time=self.duration)
 
         ft.tracing_OFF(instance=self.instance)
         ft.disable_option(option="event-fork", instance=self.instance)
