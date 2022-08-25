@@ -19,7 +19,7 @@ class syscall_tracer(tc.tracer):
     def __init__(self, description):
         self.syscalls=[]
         super().__init__(prog_desc=script_description, args_desc=args_description)
-        self.parser.add_argument('-s', '--syscall', nargs='*', dest='syscall',
+        self.parser.add_argument('-s', '--syscall', nargs='+', dest='syscall',
                                  help="list of System call names to be traced, optional")
 
     def parse(self):

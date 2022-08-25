@@ -18,7 +18,7 @@ class tracer:
         self.duration = 0
         self.instance = None
         self.parser = argparse.ArgumentParser(description=prog_desc)
-        self.parser.add_argument('-p', '--pid', nargs='*', dest='pids', type=int,
+        self.parser.add_argument('-p', '--pid', nargs='+', dest='pids', type=int,
                                  help="list of Process IDs to be traced, mandatory argument")
         self.parser.add_argument('-i', '--instance', nargs=1, dest='instance',
                                  help="Name of the trace instance used for tracing, optional argument")
