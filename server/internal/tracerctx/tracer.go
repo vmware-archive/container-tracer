@@ -8,6 +8,8 @@ package tracerctx
 
 import (
 	"fmt"
+	"math/rand"
+	"time"
 
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/pods"
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracehook"
@@ -29,6 +31,8 @@ type TracerConfig struct {
 func NewTracer(cfg *TracerConfig) (*Tracer, error) {
 	var err error
 	tr := Tracer{}
+
+	rand.Seed(time.Now().Unix())
 
 	if tr.pods, err = pods.NewPodDb(cfg.Cri, cfg.ForceProc); err != nil {
 		return nil, err
