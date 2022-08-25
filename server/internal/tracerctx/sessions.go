@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"strings"
 
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/pods"
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracehook"
@@ -37,17 +38,18 @@ type traceSessionInfo struct {
 	Context     *string
 	Containers  map[string][]*string
 	TraceHook   *string
-	TraceParams *string
+	TraceParams *[]string
 	Running     bool
+	Output      *[]string
+	Error       *[]string
 }
 
 type traceSession struct {
-	containers  []*pods.Container
-	tHook       *tracehook.TraceHook
-	tHookParam  *string
-	userContext *string
-	running     bool
-	sessionPid  int
+	containers   []*pods.Container
+	tHook        *tracehook.TraceHook
+	tHookParam   []string
+	userContext  *string
+	tHookSession *tracehook.Session
 }
 
 type sessionDb struct {
@@ -80,12 +82,17 @@ func (t *Tracer) getSessionInfo(id uint64) (*traceSessionInfo, error) {
 		return nil, fmt.Errorf("No session with ID %d", id)
 	}
 	res := traceSessionInfo{
-		Running:     s.running,
+		Running:     false,
 		TraceHook:   &s.tHook.Name,
-		TraceParams: s.tHookParam,
+		TraceParams: &s.tHookParam,
 		Context:     s.userContext,
 		Containers:  make(map[string][]*string),
 		Id:          id,
+	}
+
+	if s.tHookSession != nil {
+		res.Running = true
+		res.Output, res.Error = s.tHookSession.GetOutput()
 	}
 	for _, c := range s.containers {
 		if _, ok := res.Containers[*c.Pod]; !ok {
@@ -101,9 +108,12 @@ func (t *Tracer) newSession(s *sessionNew) (uint64, error) {
 	var e error
 	var id uint64
 	ts := traceSession{
-		running:     false,
-		tHookParam:  &s.TraceArguments,
+		tHookParam:  []string{},
 		userContext: &s.TraceUserContext,
+	}
+
+	for _, w := range strings.Fields(s.TraceArguments) {
+		ts.tHookParam = append(ts.tHookParam, w)
 	}
 
 	if id, e = t.sessions.newId(); e != nil {
@@ -125,17 +135,29 @@ func (t *Tracer) newSession(s *sessionNew) (uint64, error) {
 func (t *Tracer) startSession(id uint64) error {
 	var s *traceSession
 	var ok bool
+	var err error
 
 	if s, ok = t.sessions.all[id]; !ok {
 		return fmt.Errorf("No session with ID %d", id)
 	}
-	if s.running {
-		return nil
+	if s.tHookSession != nil {
+		return fmt.Errorf("Tracing session is running already.")
 	}
 
-	s.running = true
+	pids := []int{}
+	parent := []int{}
+	for _, p := range s.containers {
+		pids = append(pids, p.Tasks...)
+		parent = append(parent, p.Parent...)
+	}
 
-	return nil
+	if len(parent) > 0 {
+		s.tHookSession, err = t.hooks.Run(s.tHook, &pids, &parent, &s.tHookParam, s.userContext)
+	} else {
+		s.tHookSession, err = t.hooks.Run(s.tHook, &pids, nil, &s.tHookParam, s.userContext)
+	}
+
+	return err
 }
 
 func (t *Tracer) stopSession(id uint64) error {
@@ -145,13 +167,13 @@ func (t *Tracer) stopSession(id uint64) error {
 	if s, ok = t.sessions.all[id]; !ok {
 		return fmt.Errorf("No session with ID %d", id)
 	}
-	if !s.running {
-		return nil
+	if s.tHookSession == nil {
+		return fmt.Errorf("Tracing session is not started")
 	}
+	err := t.hooks.Stop(s.tHookSession, true)
+	s.tHookSession = nil
 
-	s.running = false
-
-	return nil
+	return err
 }
 
 func (t *Tracer) changeSession(id *string, p *sessionChange) error {
@@ -165,7 +187,6 @@ func (t *Tracer) changeSession(id *string, p *sessionChange) error {
 			err = t.stopSession(n)
 		}
 	}
-
 	return err
 }
 
@@ -177,11 +198,9 @@ func (t *Tracer) destroySession(id *string) error {
 		return err
 	}
 
-	if err = t.stopSession(n); err != nil {
-		return err
-	}
+	err = t.stopSession(n)
 	delete(t.sessions.all, n)
-	return nil
+	return err
 }
 
 func (t *Tracer) getSession(id *string, running bool) (*[]*traceSessionInfo, error) {
@@ -189,7 +208,7 @@ func (t *Tracer) getSession(id *string, running bool) (*[]*traceSessionInfo, err
 
 	if *id == "all" {
 		for i, s := range t.sessions.all {
-			if running && !s.running {
+			if running && s.tHookSession == nil {
 				continue
 			}
 			if info, err := t.getSessionInfo(i); err != nil {
