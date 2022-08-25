@@ -9,7 +9,7 @@ Manager of trace helper programs located in the same directory:
  - run a trace program
 """
 
-import os, subprocess, signal
+import os, subprocess, signal, sys
 import argparse, string, random
 from pathlib import Path
 import tracecruncher.ftracepy as ft
@@ -35,7 +35,8 @@ def run_script(name, arguments):
       if file.startswith(name + "."):
         try:
             output = subprocess.run(["./" + file] + arguments, capture_output=True, universal_newlines = True, start_new_session=True)
-            print(output.stdout)
+            print(output.stdout, flush=True)
+            print(output.stderr, file=sys.stderr, flush=True)
         except KeyboardInterrupt:
             pass
     exit(0)
@@ -53,7 +54,7 @@ def run_trace(name, arguments):
         pass
     if not instance:
       raise RuntimeError("Failed to create a trace instance")
-    print(ft.dir()+"/instances/"+iname+"/trace")
+    print(ft.dir()+"/instances/"+iname+"/trace_pipe", flush=True)
     run_script(name, arguments + ["--instance", iname])
 
 def reset_ftrace():
