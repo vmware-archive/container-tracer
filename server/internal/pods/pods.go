@@ -16,8 +16,7 @@ import (
 )
 
 var (
-	procfsDefault = "/proc"
-	parentPidStr  = "PPid:"
+	parentPidStr = "PPid:"
 )
 
 type podsDiscover interface {
@@ -36,7 +35,7 @@ type pod struct {
 
 type PodDb struct {
 	discover   podsDiscover
-	procfsPath string
+	procfsPath *string
 	pods       *map[string]*pod
 	node       string
 }
@@ -126,12 +125,12 @@ func getPodDiscover(criPath *string, procfsPath *string, forceProcfs *bool) (pod
 	return nil, err
 }
 
-func NewPodDb(criPath *string, forceProcfs *bool) (*PodDb, error) {
+func NewPodDb(criPath *string, procfsPath *string, forceProcfs *bool) (*PodDb, error) {
 
-	if d, err := getPodDiscover(criPath, &procfsDefault, forceProcfs); err == nil {
+	if d, err := getPodDiscover(criPath, procfsPath, forceProcfs); err == nil {
 		db := &PodDb{
 			discover:   d,
-			procfsPath: procfsDefault,
+			procfsPath: procfsPath,
 		}
 		db.Scan()
 		return db, nil
@@ -141,7 +140,7 @@ func NewPodDb(criPath *string, forceProcfs *bool) (*PodDb, error) {
 }
 
 func (p *PodDb) getParent(pid int) (int, error) {
-	if file, err := os.Open(fmt.Sprintf("%s/%d/status", p.procfsPath, pid)); err == nil {
+	if file, err := os.Open(fmt.Sprintf("%s/%d/status", *p.procfsPath, pid)); err == nil {
 		defer file.Close()
 		scan := bufio.NewScanner(file)
 		scan.Split(bufio.ScanLines)
