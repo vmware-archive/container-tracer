@@ -37,14 +37,26 @@ class syscall_tracer(tc.tracer):
           for s in events:
             if "sys_enter_" in s:
               self.syscalls.append(s)
+    def filterParents(self):
+        filter=""
+        for p in self.args.parent:
+            if filter == "":
+                filter = 'common_pid != {0}'.format(p)
+            else:
+                filter += '&& common_pid != {0}'.format(p)
+        if filter != "":
+           ft.set_event_filter(instance=self.instance, system='syscalls', filter=filter)
     def trace(self):
         if self.syscalls:
           events = self.syscalls
         else:
           events = ['all']
         ft.enable_events(instance=self.instance, events={'syscalls': events})
+        if self.args.parent:
+            self.filterParents()
         self.run_trace()
         ft.disable_events(instance=self.instance, events={'syscalls': events})
+        ft.clear_event_filter(instance=self.instance, system='syscalls')
 
 if __name__ == "__main__":
     scall_tracer = syscall_tracer(description=script_description)

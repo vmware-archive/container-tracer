@@ -19,7 +19,9 @@ class tracer:
         self.instance = None
         self.parser = argparse.ArgumentParser(description=prog_desc)
         self.parser.add_argument('-p', '--pid', nargs='+', dest='pids', type=int,
-                                 help="list of Process IDs to be traced, mandatory argument")
+                                 help="list of Process IDs to be traced, optional argument")
+        self.parser.add_argument('--parent', nargs='+', dest='parent', type=int,
+                                 help="list of parents to traced PIDs, optional argument")
         self.parser.add_argument('-i', '--instance', nargs=1, dest='instance',
                                  help="Name of the trace instance used for tracing, optional argument")
         self.parser.add_argument('-t', '--time', nargs=1, dest='time', type=int,
@@ -43,16 +45,23 @@ class tracer:
             self.instance = ft.create_instance(tracing_on=False, name=self.args.instance[0])
         else:
           self.instance = ft.create_instance(tracing_on=False)
-        if not self.args.pids:
+        if not self.args.pids and not self.args.parent:
           raise ValueError("No PIDs are provided.")
     def run_trace(self):
         ft.enable_option(option="event-fork", instance=self.instance)
         ft.enable_option(option="function-fork", instance=self.instance)
-        ft.set_event_pid(pid=self.args.pids, instance=self.instance)
-        ft.set_ftrace_pid(pid=self.args.pids, instance=self.instance)
+        if self.args.pids:
+            ft.set_event_pid(pid=self.args.pids, instance=self.instance)
+            ft.set_ftrace_pid(pid=self.args.pids, instance=self.instance)
+        if self.args.parent:
+            ft.set_event_pid(pid=self.args.parent, instance=self.instance)
+            ft.set_ftrace_pid(pid=self.args.parent, instance=self.instance)
         ft.tracing_ON(instance=self.instance)
 
-        ft.wait(signals=['SIGUSR1', 'SIGINT'], pids=self.args.pids, time=self.duration)
+        if self.args.pids:
+            ft.wait(signals=['SIGUSR1', 'SIGINT'], pids=self.args.pids, time=self.duration)
+        else:
+            ft.wait(signals=['SIGUSR1', 'SIGINT'], pids=self.args.parent, time=self.duration)
 
         ft.tracing_OFF(instance=self.instance)
         ft.disable_option(option="event-fork", instance=self.instance)
