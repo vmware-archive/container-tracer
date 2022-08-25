@@ -89,11 +89,16 @@ func (t *Tracer) TraceSessionPost(c *gin.Context) {
 }
 
 // delete a trace session
+// if id == "all", all trace sessions are deleted and trace subsystems are reseted
 func (t *Tracer) TraceSessionDel(c *gin.Context) {
 	id := c.Param("id")
-
-	if err := t.destroySession(&id); err != nil {
-		c.JSON(http.StatusNotFound, err.Error())
+	if id == "all" {
+		t.destroyAllSessions()
+		t.hooks.ResetAll()
+	} else {
+		if err := t.destroySession(&id); err != nil {
+			c.JSON(http.StatusNotFound, err.Error())
+		}
 	}
 
 	c.JSON(http.StatusOK, "{}")

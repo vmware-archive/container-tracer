@@ -211,3 +211,10 @@ func (t *Tracer) getSession(id *string, running bool) (*[]*traceSessionInfo, err
 	}
 	return &res, nil
 }
+
+func (t *Tracer) destroyAllSessions() {
+	for i := range t.sessions.all {
+		t.stopSession(i)
+		delete(t.sessions.all, i)
+	}
+}
