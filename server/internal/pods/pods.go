@@ -7,13 +7,17 @@
 package pods
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
 var (
 	procfsDefault = "/proc"
+	parentPidStr  = "PPid:"
 )
 
 type podsDiscover interface {
@@ -22,6 +26,7 @@ type podsDiscover interface {
 
 type Container struct {
 	Id, Pod *string
+	Parent  []int
 	Tasks   []int `json:"Tasks"`
 }
 
@@ -135,9 +140,62 @@ func NewPodDb(criPath *string, forceProcfs *bool) (*PodDb, error) {
 	}
 }
 
+func (p *PodDb) getParent(pid int) (int, error) {
+	if file, err := os.Open(fmt.Sprintf("%s/%d/status", p.procfsPath, pid)); err == nil {
+		defer file.Close()
+		scan := bufio.NewScanner(file)
+		scan.Split(bufio.ScanLines)
+		for scan.Scan() {
+			words := strings.Fields(scan.Text())
+			if len(words) < 2 || words[0] != parentPidStr {
+				continue
+			}
+			if i, err := strconv.Atoi(words[1]); err == nil {
+				return i, nil
+			} else {
+				return 0, err
+			}
+		}
+	} else {
+		return 0, err
+	}
+
+	return 0, fmt.Errorf("Failed to get the parent")
+}
+
+func checkArrayContains(arr []int, val int) bool {
+	for _, v := range arr {
+		if v == val {
+			return true
+		}
+	}
+	return false
+}
+
+func (p *PodDb) scanParents() {
+	for _, pd := range *p.pods {
+		for _, cn := range pd.Containers {
+			for _, t := range cn.Tasks {
+				if ppid, err := p.getParent(t); err == nil {
+					if checkArrayContains(cn.Tasks, ppid) {
+						continue
+					}
+					if checkArrayContains(cn.Parent, ppid) {
+						continue
+					}
+					cn.Parent = append(cn.Parent, ppid)
+				} else {
+					continue
+				}
+			}
+		}
+	}
+}
+
 func (p *PodDb) Scan() error {
 	if cdb, err := p.discover.podScan(); err == nil {
 		p.pods = cdb
+		p.scanParents()
 	} else {
 		return err
 	}
