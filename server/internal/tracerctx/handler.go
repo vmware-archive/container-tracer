@@ -16,7 +16,7 @@ import (
 // get all pods, running on the local node
 func (t *Tracer) LocalPodsGet(c *gin.Context) {
 	if e := t.pods.Scan(); e != nil {
-		c.JSON(http.StatusInternalServerError, e)
+		c.JSON(http.StatusInternalServerError, e.Error())
 	}
 	cdb := t.pods.Get()
 	if cdb != nil && len(*cdb) > 0 {
@@ -41,7 +41,7 @@ func (t *Tracer) TraceSessionGet(c *gin.Context) {
 	id := c.Param("id")
 
 	if resp, err := t.getSession(&id, false); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, err.Error())
 	} else {
 		if resp != nil && len(*resp) > 0 {
 			c.JSON(http.StatusOK, *resp)
@@ -57,12 +57,12 @@ func (t *Tracer) TraceSessionPut(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := c.BindJSON(&s); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if err := t.changeSession(&id, &s); err != nil {
-		c.JSON(http.StatusNotFound, err)
+		c.JSON(http.StatusNotFound, err.Error())
 	}
 
 	c.JSON(http.StatusOK, "{}")
@@ -74,7 +74,7 @@ func (t *Tracer) TraceSessionPost(c *gin.Context) {
 	resp := traceSessionInfo{}
 
 	if err := c.BindJSON(&s); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -83,7 +83,7 @@ func (t *Tracer) TraceSessionPost(c *gin.Context) {
 	} else if info, err := t.getSessionInfo(id); err == nil {
 		resp = *info
 	} else {
-		c.JSON(http.StatusInternalServerError, err)
+		c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
 	c.JSON(http.StatusOK, resp)
@@ -94,7 +94,7 @@ func (t *Tracer) TraceSessionDel(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := t.destroySession(&id); err != nil {
-		c.JSON(http.StatusNotFound, err)
+		c.JSON(http.StatusNotFound, err.Error())
 	}
 
 	c.JSON(http.StatusOK, "{}")
