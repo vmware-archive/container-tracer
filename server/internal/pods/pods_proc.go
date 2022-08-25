@@ -25,7 +25,6 @@ import (
 )
 
 var (
-	procfsDefault    = "/proc"
 	defaultContainer = "unknown"
 )
 
@@ -38,9 +37,9 @@ type podProc struct {
 	pids         []int
 }
 
-func getProcDiscover() (podsDiscover, error) {
+func getProcDiscover(procfsPath *string) (podsDiscover, error) {
 	ctr := podProc{
-		path: procfsDefault,
+		path: *procfsPath,
 		pids: make([]int, 0),
 		podb: make(map[string]*pod),
 	}

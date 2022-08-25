@@ -12,6 +12,10 @@ import (
 	"strings"
 )
 
+var (
+	procfsDefault = "/proc"
+)
+
 type podsDiscover interface {
 	podScan() (*map[string]*pod, error)
 }
@@ -26,9 +30,10 @@ type pod struct {
 }
 
 type PodDb struct {
-	discover podsDiscover
-	pods     *map[string]*pod
-	node     string
+	discover   podsDiscover
+	procfsPath string
+	pods       *map[string]*pod
+	node       string
 }
 
 func hasWildcard(pattern *string) bool {
@@ -99,17 +104,17 @@ func (p *PodDb) GetContainers(podName, containerName *string) []*Container {
 	return res
 }
 
-func getPodDiscover(criPath *string, forceProcfs *bool) (podsDiscover, error) {
+func getPodDiscover(criPath *string, procfsPath *string, forceProcfs *bool) (podsDiscover, error) {
 	var d podsDiscover
 	var err error
 
 	if forceProcfs != nil && *forceProcfs {
-		return getProcDiscover()
+		return getProcDiscover(procfsPath)
 	}
 
 	if d, err = getCriDiscover(criPath); err == nil {
 		return d, err
-	} else if d, err = getProcDiscover(); err == nil {
+	} else if d, err = getProcDiscover(procfsPath); err == nil {
 		return d, err
 	}
 
@@ -118,9 +123,10 @@ func getPodDiscover(criPath *string, forceProcfs *bool) (podsDiscover, error) {
 
 func NewPodDb(criPath *string, forceProcfs *bool) (*PodDb, error) {
 
-	if d, err := getPodDiscover(criPath, forceProcfs); err == nil {
+	if d, err := getPodDiscover(criPath, &procfsDefault, forceProcfs); err == nil {
 		db := &PodDb{
-			discover: d,
+			discover:   d,
+			procfsPath: procfsDefault,
 		}
 		db.Scan()
 		return db, nil
