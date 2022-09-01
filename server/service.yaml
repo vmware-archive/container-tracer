@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: trace-kube-service
+spec:
+  selector:
+    app: trace-kube
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: trace-kube-daemonset
+spec:
+  selector:
+    matchLabels:
+      app: trace-kube
+  template:
+    metadata:
+      labels:
+        app: trace-kube
+    spec:
+      containers:
+      - name: trace-kube
+        image: tracecruncher-api-image:latest
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /host/proc
+          name: proc
+          readOnly: true
+        - mountPath: /host/sys
+          name: sys
+        ports:
+        - containerPort: 8080
+      hostNetwork: true
+      hostPID: true
+      volumes:
+      - hostPath:
+          path: /proc
+          type: ""
+        name: proc
+      - hostPath:
+          path: /sys
+          type: ""
+        name: sys
