@@ -1,0 +1,25 @@
+image: golang:latest
+
+stages:
+  - test
+  - build
+
+format:
+  stage: test
+  script:
+    - cd server
+    - go fmt $(go list ./... | grep -v /vendor/)
+    - go vet $(go list ./... | grep -v /vendor/)
+    - go test -race $(go list ./... | grep -v /vendor/)
+
+compile:
+  stage: build
+  script:
+    - cd server
+    - mkdir -p mybinaries
+    - go build -o mybinaries ./...
+  artifacts:
+    paths:
+      - mybinaries
+
+
