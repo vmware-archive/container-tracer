@@ -20,6 +20,10 @@ instance_prefix = "kube_"
 instance_name_len = 16 - len(instance_prefix)
 instance_name_chars = string.ascii_letters + string.digits
 max_ftrace_retries = 10
+envProc = "TRACER_PROCFS_PATH"
+envSys = "TRACER_SYSFS_PATH"
+procDefPath = "/proc"
+sysDefPath = "/sys"
 
 description="Manager of trace scripts in the current directory"
 
@@ -64,6 +68,41 @@ def reset_ftrace():
         os.rmdir(i)
     exit(0)
 
+def set_ftrace_dir():
+    eproc = os.environ.get(envProc)
+    esys = os.environ.get(envSys)
+    # Return if no custom /proc or /sys mount points are passed
+    if not eproc and not esys:
+        return
+    if not eproc:
+        eproc = procDefPath
+    mfile = open(eproc + '/mounts', 'r')
+    lines = mfile.readlines()
+    ftraceMount=""
+    debugMount=""
+    # Look for tracefs or debugfs in /proc/mounts
+    for l in lines:
+        w = l.split(" ")
+        if len(w) < 3:
+            continue
+        if w[2] == 'debugfs'and os.path.isdir(w[1]):
+            debugMount = w[1]
+        if w[2] == 'tracefs'and os.path.isdir(w[1]):
+            ftraceMount = w[1]
+            break
+    # If tracefs is not found, check in debugfs
+    if ftraceMount == "" and debugMount != "":
+        fm = debugMount + 'tracing'
+        if os.path.isdir(fm):
+            ftraceMount = fm
+    if ftraceMount != "":
+        if esys and ftraceMount.startswith('/sys'):
+            fm = ftraceMount.removeprefix('/sys')
+            ftraceMount = esys + fm
+        ft.set_dir(ftraceMount)
+    else:
+        print("Failed to find ftrace mount point", file=sys.stderr, flush=True)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('-g', '--get-all', action='store_true', dest='get_all',
@@ -75,6 +114,8 @@ if __name__ == "__main__":
     parser.add_argument('-r', '--run', dest='script', nargs=1, help="Name of a trace script to run")
     parser.add_argument('-a', '--args', dest='arguments',  nargs=1,
                         help="Arguments of a trace script")
+
+    set_ftrace_dir()
 
     args = parser.parse_args()
 
