@@ -13,6 +13,7 @@ import (
 	"os"
 
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/api"
+	hooks "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracehook"
 	ctx "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracerctx"
 )
 
@@ -21,13 +22,9 @@ var (
 
 	envAddress     = "TRACER_API_ADDRESS"
 	envCri         = "TRACER_CRI_ENDPOINT"
-	envProcfs      = "TRACER_PROCFS_PATH"
-	envHooks       = "TRACER_HOOKS"
 	envForceProcfs = "TRACER_FORCE_PROCFS"
 	envVerbose     = "TRACER_VERBOSE"
 	defAddress     = ":8080"
-	defHooks       = "trace-hooks"
-	procfsDefault  = "/proc"
 )
 
 func usage() {
@@ -45,9 +42,11 @@ func getConfig() (*ctx.TracerConfig, *string) {
 	cfg.Cri = flag.String("cri-endpoint", "",
 		fmt.Sprintf("Path to the CRI endpoint. Can be passed using %s environment variable as well.", envCri))
 	cfg.Procfs = flag.String("procfs-path", "",
-		fmt.Sprintf("Path to the /proc fs mount point. Can be passed using %s environment variable as well.", envProcfs))
+		fmt.Sprintf("Path to the /proc fs mount point. Can be passed using %s environment variable as well.", hooks.EnvProcfs))
+	cfg.Sysfs = flag.String("sysfs-path", "",
+		fmt.Sprintf("Path to the /sys fs mount point. Can be passed using %s environment variable as well.", hooks.EnvSysfs))
 	cfg.Hooks = flag.String("trace-hooks", "",
-		fmt.Sprintf("Location of the directory with trace helper applications. Can be passed using %s environment variable as well.", envHooks))
+		fmt.Sprintf("Location of the directory with trace helper applications. Can be passed using %s environment variable as well.", hooks.EnvHooks))
 	cfg.ForceProc = flag.Bool("use-procfs", false,
 		fmt.Sprintf("Force using procfs for containers discovery, even if CRI is available. Can be passed using %s environment variable as well.", envForceProcfs))
 	cfg.Verbose = flag.Bool("verbose", false,
@@ -69,12 +68,15 @@ func getConfig() (*ctx.TracerConfig, *string) {
 	}
 
 	if *cfg.Procfs == "" {
-		a := os.Getenv(envProcfs)
+		a := os.Getenv(hooks.EnvProcfs)
 		cfg.Procfs = &a
 	}
-	if *cfg.Procfs == "" {
-		cfg.Procfs = &procfsDefault
+
+	if *cfg.Sysfs == "" {
+		a := os.Getenv(hooks.EnvSysfs)
+		cfg.Sysfs = &a
 	}
+
 	if *cfg.ForceProc == false {
 		if _, ok := os.LookupEnv(envForceProcfs); ok {
 			a := true
@@ -90,11 +92,11 @@ func getConfig() (*ctx.TracerConfig, *string) {
 	}
 
 	if *cfg.Hooks == "" {
-		a := os.Getenv(envHooks)
+		a := os.Getenv(hooks.EnvHooks)
 		cfg.Hooks = &a
 	}
 	if *cfg.Hooks == "" {
-		cfg.Hooks = &defHooks
+		cfg.Hooks = &hooks.DefaultHookPath
 	}
 
 	return &cfg, flApiAddr

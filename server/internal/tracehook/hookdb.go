@@ -19,8 +19,11 @@ import (
 )
 
 var (
-	managerPrefix = "manager."
-	defaultPath   = "trace-hooks"
+	managerPrefix   = "manager."
+	DefaultHookPath = "trace-hooks"
+	EnvProcfs       = "TRACER_PROCFS_PATH"
+	EnvSysfs        = "TRACER_SYSFS_PATH"
+	EnvHooks        = "TRACER_HOOKS"
 )
 
 type TraceHook struct {
@@ -46,6 +49,7 @@ type hookManager struct {
 
 type TraceHooks struct {
 	topDir   *string
+	env      []string
 	managers map[string]*hookManager
 }
 
@@ -105,6 +109,7 @@ func (h *TraceHooks) scanManagers(dir *string) error {
 /* Call the manager to get available trace hooks and description of each of them */
 func (h *TraceHooks) scanTraceHooks(dir *string) error {
 	all := exec.Command("./"+h.managers[*dir].fexec, "--get-all")
+	all.Env = h.env
 	all.Dir = *dir
 
 	var allOut bytes.Buffer
@@ -116,6 +121,7 @@ func (h *TraceHooks) scanTraceHooks(dir *string) error {
 
 	for _, s := range strings.Fields(allOut.String()) {
 		desc := exec.Command("./"+h.managers[*dir].fexec, "--describe", s)
+		desc.Env = h.env
 		desc.Dir = *dir
 
 		var descOut bytes.Buffer
@@ -176,6 +182,7 @@ func (h *TraceHooks) Run(th *TraceHook, pids *[]int, parent *[]int, params *[]st
 	}
 	args = append(args, sargs)
 	ret.cmd = exec.Command("./"+th.manager.fexec, args...)
+	ret.cmd.Env = h.env
 	ret.cmd.Dir = th.manager.dir
 	stdoutIn, _ := ret.cmd.StdoutPipe()
 	stderrIn, _ := ret.cmd.StderrPipe()
@@ -231,13 +238,30 @@ func (h *TraceHooks) discoverHooks() error {
 }
 
 /* Create a new database with trace hooks in given directory */
-func NewTraceHooksDb(path *string) (*TraceHooks, error) {
+func NewTraceHooksDb(path, procfs, sysfs *string) (*TraceHooks, error) {
 	db := TraceHooks{
 		topDir: path,
+		env:    os.Environ(),
+	}
+
+	/* Pass /proc custom moint point to the trace hook scripts */
+	if procfs != nil && *procfs != "" {
+		if _, found := os.LookupEnv(EnvProcfs); !found {
+			e := EnvProcfs + "=" + *procfs
+			db.env = append(db.env, e)
+		}
+	}
+
+	/* Pass /sys custom moint point to the trace hook scripts */
+	if sysfs != nil && *sysfs != "" {
+		if _, found := os.LookupEnv(EnvSysfs); !found {
+			e := EnvSysfs + "=" + *sysfs
+			db.env = append(db.env, e)
+		}
 	}
 
 	if db.topDir == nil || *db.topDir == "" {
-		db.topDir = &defaultPath
+		db.topDir = &DefaultHookPath
 	}
 
 	if e := db.discoverHooks(); e != nil {
@@ -257,6 +281,7 @@ func (h *TraceHooks) Get() *map[string]*hookManager {
 func (h *TraceHooks) ResetAll() {
 	for d, m := range h.managers {
 		cmd := exec.Command("./"+m.fexec, "--clear")
+		cmd.Env = h.env
 		cmd.Dir = d
 		cmd.Run()
 	}

@@ -16,7 +16,8 @@ import (
 )
 
 var (
-	parentPidStr = "PPid:"
+	parentPidStr      = "PPid:"
+	procfsPathDefault = "/proc"
 )
 
 type podsDiscover interface {
@@ -126,6 +127,10 @@ func getPodDiscover(criPath *string, procfsPath *string, forceProcfs *bool) (pod
 }
 
 func NewPodDb(criPath *string, procfsPath *string, forceProcfs *bool) (*PodDb, error) {
+
+	if procfsPath == nil || *procfsPath == "" {
+		procfsPath = &procfsPathDefault
+	}
 
 	if d, err := getPodDiscover(criPath, procfsPath, forceProcfs); err == nil {
 		db := &PodDb{
