@@ -2,16 +2,14 @@
 #
 # Copyright 2022 VMware Inc, June Knauth (VMware) <june.knauth@gmail.com>
 
-FROM debian:bullseye
-# Add bulleye-backports for golang 1.18
-RUN echo "deb http://deb.debian.org/debian bullseye-backports main" >> /etc/apt/sources.list
+FROM golang:1.18-bullseye
 # Install APT and pip dependencies
 RUN apt update \
 	&& apt install build-essential git cmake \
 		libjson-c-dev libpython3-dev cython3 \
 		python3-numpy python3-pip flex valgrind \
 		binutils-dev libzstd-dev libaudit-dev pkg-config \
-		swig curl golang-1.18/bullseye-backports -y \
+		swig curl -y \
 && pip3 install pkgconfig GitPython
 # Download the latest git-snapshot tool from the trace-cruncher GitHub
 # Then use it to download a snapshot of trace-cruncher and its dependencies (defined in repos)
@@ -35,16 +33,24 @@ WORKDIR trace-cruncher-api
 COPY api api
 COPY cmd cmd
 COPY internal internal
-COPY trace-hooks trace-hooks
 COPY go.mod go.sum ./
-RUN /usr/lib/go-1.18/bin/go build -o run-api ./cmd/tracer/
+RUN go build -o node-tracer ./cmd/tracer/
+
+WORKDIR /tracer
+COPY trace-hooks trace-hooks
+RUN cp /build/trace-cruncher-api/node-tracer .
 
 # Remove build dependencies; run build with --squash to reduce image size
-WORKDIR /build
-RUN cd trace-cruncher && make clean
+RUN rm -rf /build
+RUN rm -rf /root/go
+RUN rm -rf /go
+RUN rm -rf /usr/local/go
+RUN rm -rf /root/.cache/*
 RUN pip3 uninstall pkgconfig -y \
 	&& apt remove build-essential cmake python3-pip libpython3-dev flex valgrind \
-		binutils-dev libzstd-dev libaudit-dev pkg-config swig curl golang-1.18 -y \
+		binutils-dev libzstd-dev libaudit-dev pkg-config swig curl -y \
 	&& apt autoremove -y
 EXPOSE 8080/tcp
-ENTRYPOINT ["./trace-cruncher-api/run-api"]
+WORKDIR /tracer
+ENTRYPOINT ["./node-tracer"]
+
