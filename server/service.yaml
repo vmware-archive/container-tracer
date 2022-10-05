@@ -27,6 +27,11 @@ spec:
       containers:
       - name: trace-kube
         image: tracecruncher-api-image:latest
+        env:
+        - name: TRACER_PROCFS_PATH
+          value: "/host/proc"
+        - name: TRACER_SYSFS_PATH
+          value: "/host/sys"
         securityContext:
           privileged: true
         volumeMounts:
