@@ -26,6 +26,12 @@ var (
 	EnvHooks        = "TRACER_HOOKS"
 )
 
+type HookConfig struct {
+	HooksPath *string /* Path to directory with trace hooks. */
+	Sysfs     *string /* /sys fs  mountpoint. */
+	Procfs    *string /* /proc fs  mountpoint. */
+}
+
 type TraceHook struct {
 	Name        string
 	manager     *hookManager
@@ -238,24 +244,24 @@ func (h *TraceHooks) discoverHooks() error {
 }
 
 /* Create a new database with trace hooks in given directory */
-func NewTraceHooksDb(path, procfs, sysfs *string) (*TraceHooks, error) {
+func NewTraceHooksDb(cfg *HookConfig) (*TraceHooks, error) {
 	db := TraceHooks{
-		topDir: path,
+		topDir: cfg.HooksPath,
 		env:    os.Environ(),
 	}
 
 	/* Pass /proc custom moint point to the trace hook scripts */
-	if procfs != nil && *procfs != "" {
+	if cfg.Procfs != nil && *cfg.Procfs != "" {
 		if _, found := os.LookupEnv(EnvProcfs); !found {
-			e := EnvProcfs + "=" + *procfs
+			e := EnvProcfs + "=" + *cfg.Procfs
 			db.env = append(db.env, e)
 		}
 	}
 
 	/* Pass /sys custom moint point to the trace hook scripts */
-	if sysfs != nil && *sysfs != "" {
+	if cfg.Sysfs != nil && *cfg.Sysfs != "" {
 		if _, found := os.LookupEnv(EnvSysfs); !found {
-			e := EnvSysfs + "=" + *sysfs
+			e := EnvSysfs + "=" + *cfg.Sysfs
 			db.env = append(db.env, e)
 		}
 	}

@@ -18,10 +18,16 @@ import (
 var (
 	parentPidStr      = "PPid:"
 	procfsPathDefault = "/proc"
+	EnvForceProcfs    = "TRACER_FORCE_PROCFS"
 )
 
 type podsDiscover interface {
 	podScan() (*map[string]*pod, error)
+}
+
+type PodConfig struct {
+	Cri       CriConfig
+	ForceProc *bool /* Force using procfs for containers discovery, even if CRI is available. */
 }
 
 type Container struct {
@@ -38,7 +44,6 @@ type PodDb struct {
 	discover   podsDiscover
 	procfsPath *string
 	pods       *map[string]*pod
-	node       string
 }
 
 func hasWildcard(pattern *string) bool {
@@ -109,15 +114,15 @@ func (p *PodDb) GetContainers(podName, containerName *string) []*Container {
 	return res
 }
 
-func getPodDiscover(criPath *string, runPaths []string, procfsPath *string, forceProcfs *bool) (podsDiscover, error) {
+func getPodDiscover(cfg *PodConfig, procfsPath *string) (podsDiscover, error) {
 	var d podsDiscover
 	var err error
 
-	if forceProcfs != nil && *forceProcfs {
+	if cfg.ForceProc != nil && *cfg.ForceProc {
 		return getProcDiscover(procfsPath)
 	}
 
-	if d, err = getCriDiscover(criPath, runPaths); err == nil {
+	if d, err = getCriDiscover(&cfg.Cri); err == nil {
 		return d, err
 	} else if d, err = getProcDiscover(procfsPath); err == nil {
 		return d, err
@@ -126,16 +131,17 @@ func getPodDiscover(criPath *string, runPaths []string, procfsPath *string, forc
 	return nil, err
 }
 
-func NewPodDb(criPath *string, runPaths []string, procfsPath *string, forceProcfs *bool) (*PodDb, error) {
+func NewPodDb(cfg *PodConfig, procfsPath *string) (*PodDb, error) {
 
-	if procfsPath == nil || *procfsPath == "" {
-		procfsPath = &procfsPathDefault
+	ppath := procfsPath
+	if ppath == nil || *ppath == "" {
+		ppath = &procfsPathDefault
 	}
 
-	if d, err := getPodDiscover(criPath, runPaths, procfsPath, forceProcfs); err == nil {
+	if d, err := getPodDiscover(cfg, ppath); err == nil {
 		db := &PodDb{
 			discover:   d,
-			procfsPath: procfsPath,
+			procfsPath: ppath,
 		}
 		db.Scan()
 		return db, nil

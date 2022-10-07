@@ -22,13 +22,10 @@ type Tracer struct {
 }
 
 type TracerConfig struct {
-	Cri       *string  /* CRI  endpoint. */
-	Procfs    *string  /* /proc fs  mountpoint. */
-	Sysfs     *string  /* /sys fs  mountpoint. */
-	Hooks     *string  /* Path to directory with trace hooks. */
-	RunPaths  []string /* Paths to run directories. */
-	ForceProc *bool    /* Force using procfs for containers discovery, even if CRI is available. */
-	Verbose   *bool    /* Print informational logs on the standard output. */
+	NodeName *string              /* Name of the cluster node */
+	Verbose  *bool                /* Print informational logs on the standard output. */
+	Hook     tracehook.HookConfig /* User configuration, specific to trace-hooks database */
+	Pod      pods.PodConfig       /* User configuration, specific to pods database */
 }
 
 func NewTracer(cfg *TracerConfig) (*Tracer, error) {
@@ -37,10 +34,10 @@ func NewTracer(cfg *TracerConfig) (*Tracer, error) {
 
 	rand.Seed(time.Now().Unix())
 
-	if tr.pods, err = pods.NewPodDb(cfg.Cri, cfg.RunPaths, cfg.Procfs, cfg.ForceProc); err != nil {
+	if tr.pods, err = pods.NewPodDb(&cfg.Pod, cfg.Hook.Procfs); err != nil {
 		return nil, err
 	}
-	if tr.hooks, err = tracehook.NewTraceHooksDb(cfg.Hooks, cfg.Procfs, cfg.Sysfs); err != nil {
+	if tr.hooks, err = tracehook.NewTraceHooksDb(&cfg.Hook); err != nil {
 		return nil, err
 	}
 

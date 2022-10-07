@@ -14,19 +14,18 @@ import (
 	"strings"
 
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/api"
+	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/pods"
 	hooks "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracehook"
 	ctx "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracerctx"
 )
 
 var (
 	description = "Trace containers running on the local node."
+	envAddress  = "TRACER_API_ADDRESS"
+	envVerbose  = "TRACER_VERBOSE"
+	envNodeName = "TRACER_NODE_NAME"
 
-	envAddress     = "TRACER_API_ADDRESS"
-	envCri         = "TRACER_CRI_ENDPOINT"
-	envRunPaths    = "TRACER_RUN_PATHS"
-	envForceProcfs = "TRACER_FORCE_PROCFS"
-	envVerbose     = "TRACER_VERBOSE"
-	defAddress     = ":8080"
+	defAddress = ":8080"
 )
 
 func usage() {
@@ -70,20 +69,26 @@ func getConfig() (*ctx.TracerConfig, *string) {
 	flApiAddr := flag.String("address", "",
 		fmt.Sprintf("IP address and port in format IP:port, used for listening for incoming API requests.Can be passed using %s environment variable as well",
 			envAddress))
-	flag.Var(&runPathsArg, "run-path",
-		fmt.Sprintf("Path to the run directories, to look for cri endpoints. Can be passed using %s environment variable as well.", envRunPaths))
-	cfg.Cri = flag.String("cri-endpoint", "",
-		fmt.Sprintf("Path to the CRI endpoint. Can be passed using %s environment variable as well.", envCri))
-	cfg.Procfs = flag.String("procfs-path", "",
-		fmt.Sprintf("Path to the /proc fs mount point. Can be passed using %s environment variable as well.", hooks.EnvProcfs))
-	cfg.Sysfs = flag.String("sysfs-path", "",
-		fmt.Sprintf("Path to the /sys fs mount point. Can be passed using %s environment variable as well.", hooks.EnvSysfs))
-	cfg.Hooks = flag.String("trace-hooks", "",
-		fmt.Sprintf("Location of the directory with trace helper applications. Can be passed using %s environment variable as well.", hooks.EnvHooks))
-	cfg.ForceProc = flag.Bool("use-procfs", false,
-		fmt.Sprintf("Force using procfs for containers discovery, even if CRI is available. Can be passed using %s environment variable as well.", envForceProcfs))
 	cfg.Verbose = flag.Bool("verbose", false,
 		fmt.Sprintf("Print informational logs on the standard output. Can be passed using %s environment variable as well.", envVerbose))
+	cfg.NodeName = flag.String("node-name", "",
+		fmt.Sprintf("Name of the node, which runs that tracer instance. Can be passed using %s environment variable as well.", envNodeName))
+
+	cfg.Hook.Procfs = flag.String("procfs-path", "",
+		fmt.Sprintf("Path to the /proc fs mount point. Can be passed using %s environment variable as well.", hooks.EnvProcfs))
+	cfg.Hook.Sysfs = flag.String("sysfs-path", "",
+		fmt.Sprintf("Path to the /sys fs mount point. Can be passed using %s environment variable as well.", hooks.EnvSysfs))
+	cfg.Hook.HooksPath = flag.String("trace-hooks", "",
+		fmt.Sprintf("Location of the directory with trace helper applications. Can be passed using %s environment variable as well.", hooks.EnvHooks))
+
+	flag.Var(&runPathsArg, "run-path",
+		fmt.Sprintf("Path to the run directories, to look for cri endpoints. Can be passed using %s environment variable as well.", pods.EnvRunPaths))
+	cfg.Pod.Cri.Endpoint = flag.String("cri-endpoint", "",
+		fmt.Sprintf("Path to the CRI endpoint. Can be passed using %s environment variable as well.", pods.EnvCri))
+	cfg.Pod.Cri.PodName = flag.String("pod-name", "",
+		fmt.Sprintf("Name of the tracer pod, used to verify the CRI endpoint. Can be passed using %s environment variable as well.", pods.EnvPodName))
+	cfg.Pod.ForceProc = flag.Bool("use-procfs", false,
+		fmt.Sprintf("Force using procfs for containers discovery, even if CRI is available. Can be passed using %s environment variable as well.", pods.EnvForceProcfs))
 
 	flag.Parse()
 
@@ -94,48 +99,51 @@ func getConfig() (*ctx.TracerConfig, *string) {
 	if *flApiAddr == "" {
 		flApiAddr = &defAddress
 	}
-
-	if *cfg.Cri == "" {
-		a := os.Getenv(envCri)
-		cfg.Cri = &a
-	}
-
-	if *cfg.Procfs == "" {
-		a := os.Getenv(hooks.EnvProcfs)
-		cfg.Procfs = &a
-	}
-
-	if *cfg.Sysfs == "" {
-		a := os.Getenv(hooks.EnvSysfs)
-		cfg.Sysfs = &a
-	}
-
-	if *cfg.ForceProc == false {
-		if _, ok := os.LookupEnv(envForceProcfs); ok {
-			a := true
-			cfg.ForceProc = &a
-		}
-	}
-
 	if *cfg.Verbose == false {
 		if _, ok := os.LookupEnv(envVerbose); ok {
 			a := true
 			cfg.Verbose = &a
 		}
 	}
+	if *cfg.NodeName == "" {
+		a := os.Getenv(envNodeName)
+		cfg.NodeName = &a
+	}
 
-	if *cfg.Hooks == "" {
+	if *cfg.Hook.Procfs == "" {
+		a := os.Getenv(hooks.EnvProcfs)
+		cfg.Hook.Procfs = &a
+	}
+	if *cfg.Hook.Sysfs == "" {
+		a := os.Getenv(hooks.EnvSysfs)
+		cfg.Hook.Sysfs = &a
+	}
+	if *cfg.Hook.HooksPath == "" {
 		a := os.Getenv(hooks.EnvHooks)
-		cfg.Hooks = &a
+		cfg.Hook.HooksPath = &a
 	}
-	if *cfg.Hooks == "" {
-		cfg.Hooks = &hooks.DefaultHookPath
+	if *cfg.Hook.HooksPath == "" {
+		cfg.Hook.HooksPath = &hooks.DefaultHookPath
 	}
 
-	if len(runPathsArg) == 0 {
-		runPathsArg.Set(os.Getenv(envRunPaths))
+	if *cfg.Pod.Cri.Endpoint == "" {
+		a := os.Getenv(pods.EnvCri)
+		cfg.Pod.Cri.Endpoint = &a
 	}
-	cfg.RunPaths = runPathsArg
+	if *cfg.Pod.ForceProc == false {
+		if _, ok := os.LookupEnv(pods.EnvForceProcfs); ok {
+			a := true
+			cfg.Pod.ForceProc = &a
+		}
+	}
+	if *cfg.Pod.Cri.PodName == "" {
+		a := os.Getenv(pods.EnvPodName)
+		cfg.Pod.Cri.PodName = &a
+	}
+	if len(runPathsArg) == 0 {
+		runPathsArg.Set(os.Getenv(pods.EnvRunPaths))
+	}
+	cfg.Pod.Cri.RunPaths = runPathsArg
 
 	return &cfg, flApiAddr
 }

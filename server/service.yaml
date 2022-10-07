@@ -34,6 +34,14 @@ spec:
           value: "/host/sys"
         - name: TRACER_RUN_PATHS
           value: "/host/run, /host/var/run"
+        - name: TRACER_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: TRACER_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name              
         securityContext:
           privileged: true
         volumeMounts:
