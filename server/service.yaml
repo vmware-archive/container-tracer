@@ -32,6 +32,8 @@ spec:
           value: "/host/proc"
         - name: TRACER_SYSFS_PATH
           value: "/host/sys"
+        - name: TRACER_RUN_PATHS
+          value: "/host/run, /host/var/run"
         securityContext:
           privileged: true
         volumeMounts:
@@ -40,6 +42,10 @@ spec:
           readOnly: true
         - mountPath: /host/sys
           name: sys
+        - mountPath: /host/run
+          name: run
+        - mountPath: /host/var/run
+          name: vrun
         ports:
         - containerPort: 8080
       hostNetwork: true
@@ -53,3 +59,11 @@ spec:
           path: /sys
           type: ""
         name: sys
+      - hostPath:
+          path: /run
+          type: ""
+        name: run
+      - hostPath:
+          path: /var/run
+          type: ""
+        name: vrun

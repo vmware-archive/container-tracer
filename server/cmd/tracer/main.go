@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/api"
 	hooks "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracehook"
@@ -22,6 +23,7 @@ var (
 
 	envAddress     = "TRACER_API_ADDRESS"
 	envCri         = "TRACER_CRI_ENDPOINT"
+	envRunPaths    = "TRACER_RUN_PATHS"
 	envForceProcfs = "TRACER_FORCE_PROCFS"
 	envVerbose     = "TRACER_VERBOSE"
 	defAddress     = ":8080"
@@ -33,12 +35,43 @@ func usage() {
 	flag.PrintDefaults()
 }
 
+type stringsFlag []string
+
+func (arr *stringsFlag) String() string {
+	str := ""
+	if arr != nil {
+		for _, s := range *arr {
+			str += s + " "
+		}
+	}
+	return str
+}
+
+func (arr *stringsFlag) Set(s string) error {
+
+	sep := func(r rune) bool {
+		return r == ',' || r == ';' || r == ' ' || r == '\t'
+	}
+	all := strings.FieldsFunc(s, sep)
+	for _, a := range all {
+		sa := strings.Trim(a, " \t\n")
+		if sa != "" {
+			*arr = append(*arr, sa)
+		}
+	}
+
+	return nil
+}
+
 func getConfig() (*ctx.TracerConfig, *string) {
+	var runPathsArg stringsFlag
 	cfg := ctx.TracerConfig{}
 
 	flApiAddr := flag.String("address", "",
 		fmt.Sprintf("IP address and port in format IP:port, used for listening for incoming API requests.Can be passed using %s environment variable as well",
 			envAddress))
+	flag.Var(&runPathsArg, "run-path",
+		fmt.Sprintf("Path to the run directories, to look for cri endpoints. Can be passed using %s environment variable as well.", envRunPaths))
 	cfg.Cri = flag.String("cri-endpoint", "",
 		fmt.Sprintf("Path to the CRI endpoint. Can be passed using %s environment variable as well.", envCri))
 	cfg.Procfs = flag.String("procfs-path", "",
@@ -98,6 +131,11 @@ func getConfig() (*ctx.TracerConfig, *string) {
 	if *cfg.Hooks == "" {
 		cfg.Hooks = &hooks.DefaultHookPath
 	}
+
+	if len(runPathsArg) == 0 {
+		runPathsArg.Set(os.Getenv(envRunPaths))
+	}
+	cfg.RunPaths = runPathsArg
 
 	return &cfg, flApiAddr
 }

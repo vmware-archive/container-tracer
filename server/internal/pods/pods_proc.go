@@ -56,6 +56,7 @@ func getProcDiscover(procfsPath *string) (podsDiscover, error) {
 		ctr.top_utsns_fd = int(f.Fd())
 	}
 
+	print("\nUsing PROC for pods discovery at ", ctr.path, "\n")
 	return ctr, nil
 }
 

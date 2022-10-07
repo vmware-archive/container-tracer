@@ -17,12 +17,20 @@ import (
 	ktype "k8s.io/kubernetes/pkg/kubelet/types"
 )
 
-var knownCriEndpoints = [...]string{
-	"unix:///run/containerd/containerd.sock",
-	"unix:///var/run/cri-dockerd.sock",
-	"unix:///var/run/dockershim.sock",
-	"unix:///run/crio/crio.sock",
-}
+var (
+	socPrefix       = "unix://"
+	defaultRunPaths = []string{
+		"/run",
+		"/var/run",
+	}
+	knownCriEndpoints = [...]string{
+		"k3s/containerd/containerd.sock",
+		"containerd/containerd.sock",
+		"cri-dockerd.sock",
+		"dockershim.sock",
+		"crio/crio.sock",
+	}
+)
 
 type podCri struct {
 	api  criapi.RuntimeService
@@ -33,7 +41,7 @@ type podCriInfo struct {
 	Pid int `json:"Pid"`
 }
 
-func (p *podCri) criConnect(endpoint *string) error {
+func (p *podCri) criConnect(endpoint *string, runPaths []string) error {
 	timeout := 100 * time.Millisecond
 
 	if endpoint != nil && *endpoint != "" {
@@ -45,24 +53,33 @@ func (p *podCri) criConnect(endpoint *string) error {
 		return nil
 	}
 
-	for _, ep := range knownCriEndpoints {
-		svc, err := remote.NewRemoteRuntimeService(ep, timeout)
-		if err == nil {
-			p.api = svc
-			return nil
+	paths := defaultRunPaths
+	if len(runPaths) > 0 {
+		paths = runPaths
+	}
+
+	for _, pt := range paths {
+		for _, ep := range knownCriEndpoints {
+			sockUrl := socPrefix + pt + "/" + ep
+			svc, err := remote.NewRemoteRuntimeService(sockUrl, timeout)
+			if err == nil {
+				p.api = svc
+				print("\nUsing CRI for pods discovery at ", sockUrl, "\n")
+				return nil
+			}
 		}
 	}
 
 	return fmt.Errorf("Cannot connect to CRI endpoint")
 }
 
-func getCriDiscover(endpoint *string) (podsDiscover, error) {
+func getCriDiscover(endpoint *string, runPaths []string) (podsDiscover, error) {
 
 	ctr := podCri{
 		podb: make(map[string]*pod),
 	}
 
-	if err := ctr.criConnect(endpoint); err != nil {
+	if err := ctr.criConnect(endpoint, runPaths); err != nil {
 		return nil, err
 	}
 

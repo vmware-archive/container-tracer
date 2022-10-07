@@ -109,7 +109,7 @@ func (p *PodDb) GetContainers(podName, containerName *string) []*Container {
 	return res
 }
 
-func getPodDiscover(criPath *string, procfsPath *string, forceProcfs *bool) (podsDiscover, error) {
+func getPodDiscover(criPath *string, runPaths []string, procfsPath *string, forceProcfs *bool) (podsDiscover, error) {
 	var d podsDiscover
 	var err error
 
@@ -117,7 +117,7 @@ func getPodDiscover(criPath *string, procfsPath *string, forceProcfs *bool) (pod
 		return getProcDiscover(procfsPath)
 	}
 
-	if d, err = getCriDiscover(criPath); err == nil {
+	if d, err = getCriDiscover(criPath, runPaths); err == nil {
 		return d, err
 	} else if d, err = getProcDiscover(procfsPath); err == nil {
 		return d, err
@@ -126,13 +126,13 @@ func getPodDiscover(criPath *string, procfsPath *string, forceProcfs *bool) (pod
 	return nil, err
 }
 
-func NewPodDb(criPath *string, procfsPath *string, forceProcfs *bool) (*PodDb, error) {
+func NewPodDb(criPath *string, runPaths []string, procfsPath *string, forceProcfs *bool) (*PodDb, error) {
 
 	if procfsPath == nil || *procfsPath == "" {
 		procfsPath = &procfsPathDefault
 	}
 
-	if d, err := getPodDiscover(criPath, procfsPath, forceProcfs); err == nil {
+	if d, err := getPodDiscover(criPath, runPaths, procfsPath, forceProcfs); err == nil {
 		db := &PodDb{
 			discover:   d,
 			procfsPath: procfsPath,
