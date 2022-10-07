@@ -12,6 +12,7 @@ build:
 	cd cmd/tracer/ && $(GO) build -o $(BINARY) .
 
 GIT_SHA=$(shell git rev-parse HEAD)
+DOCKER_IMAGE=vmware/opensource/node-tracer
 
 docker: build docker_build
 
@@ -19,7 +20,7 @@ docker_build:
 	docker build \
 		-f Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
-		-t gitlab.eng.vmware.com/opensource/tracecruncher-api:$(GIT_SHA) \
+		-t $(DOCKER_IMAGE):$(GIT_SHA) \
 		.
 
 clean:
