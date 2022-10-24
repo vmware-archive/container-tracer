@@ -34,11 +34,11 @@ COPY api api
 COPY cmd cmd
 COPY internal internal
 COPY go.mod go.sum ./
-RUN go build -o node-tracer ./cmd/tracer/
+RUN go build -o tracer-node ./cmd/tracer-node/
 
 WORKDIR /tracer
 COPY trace-hooks trace-hooks
-RUN cp /build/trace-cruncher-api/node-tracer .
+RUN cp /build/trace-cruncher-api/tracer-node .
 
 # Remove build dependencies; run build with --squash to reduce image size
 RUN rm -rf /build
@@ -52,5 +52,5 @@ RUN pip3 uninstall pkgconfig -y \
 	&& apt autoremove -y
 EXPOSE 8080/tcp
 WORKDIR /tracer
-ENTRYPOINT ["./node-tracer"]
+ENTRYPOINT ["./tracer-node"]
 
