@@ -13,7 +13,7 @@ import (
 	"os"
 	"strings"
 
-	"gitlab.eng.vmware.com/opensource/tracecruncher-api/api"
+	api "gitlab.eng.vmware.com/opensource/tracecruncher-api/api/node"
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/pods"
 	hooks "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracehook"
 	ctx "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracerctx"
