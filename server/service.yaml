@@ -1,32 +1,66 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: trace-kube-service
+  name: trace-kube-api
 spec:
   selector:
-    app: trace-kube
+    app: trace-kube-frontend
   ports:
     - port: 8080
       targetPort: 8080
       protocol: TCP
   type: NodePort
 ---
-apiVersion: apps/v1
-kind: DaemonSet
+apiVersion: v1
+kind: Service
 metadata:
-  name: trace-kube-daemonset
+  name: trace-kube-node
+spec:
+  selector:
+    app: trace-kube-backend
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trace-kube-api
+  labels:
+    app: trace-kube-frontend
 spec:
   selector:
     matchLabels:
-      app: trace-kube
+      app: trace-kube-frontend
   template:
     metadata:
       labels:
-        app: trace-kube
+        app: trace-kube-frontend
     spec:
       containers:
       - name: trace-kube
-        image: vmware/opensource/tracer-node:latest
+        image: vmware/opensource/trace-kube/tracer-svc:latest
+        ports:
+        - containerPort: 8080
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: trace-kube-node
+spec:
+  selector:
+    matchLabels:
+      app: trace-kube-backend
+  template:
+    metadata:
+      labels:
+        app: trace-kube-backend
+    spec:
+      containers:
+      - name: trace-kube
+        image: vmware/opensource/trace-kube/tracer-node:latest
         env:
         - name: TRACER_PROCFS_PATH
           value: "/host/proc"
@@ -41,7 +75,7 @@ spec:
         - name: TRACER_POD_NAME
           valueFrom:
             fieldRef:
-              fieldPath: metadata.name              
+              fieldPath: metadata.name
         securityContext:
           privileged: true
         volumeMounts:
