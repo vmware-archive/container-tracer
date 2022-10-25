@@ -29,24 +29,16 @@ RUN cd trace-cruncher && make && make install
 # Install the trace-cruncher api
 # The five copy commands are, as far as I can tell, necessary,
 # as Docker only copies directory contents when you don't provide a dest path
-WORKDIR trace-cruncher-api
-COPY api api
-COPY cmd cmd
-COPY internal internal
-COPY go.mod go.sum ./
-COPY Makefile Makefile ./
+WORKDIR trace-kube
+COPY . ./
 RUN make tracer
 
 WORKDIR /tracer
 COPY trace-hooks trace-hooks
-RUN cp /build/trace-cruncher-api/cmd/tracer-node/tracer-node .
+RUN cp /build/trace-kube/cmd/tracer-node/tracer-node .
 
 # Remove build dependencies; run build with --squash to reduce image size
-RUN rm -rf /build
-RUN rm -rf /root/go
-RUN rm -rf /go
-RUN rm -rf /usr/local/go
-RUN rm -rf /root/.cache/*
+RUN rm -rf /build /root/go /go /usr/local/go /root/.cache/*
 RUN pip3 uninstall pkgconfig -y \
 	&& apt remove build-essential git cmake python3-pip libpython3-dev flex valgrind \
 		binutils-dev libzstd-dev libaudit-dev pkg-config swig curl -y \
