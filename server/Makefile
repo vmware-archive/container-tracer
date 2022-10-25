@@ -4,24 +4,27 @@
 .PHONY: build clean docker
 GO = CGO_ENABLED=0 GO111MODULE=on GOOS=linux go
 
-NODE_BINARY=tracer-node
+BIN_TRACER=tracer-node
 
 all: build
 
-build:
-	cd cmd/$(NODE_BINARY)/ && $(GO) build -o $(NODE_BINARY) .
+tracer:
+	cd cmd/$(BIN_TRACER) && $(GO) build -o $(BIN_TRACER) .
+
+build: tracer
 
 GIT_SHA=$(shell git rev-parse HEAD)
-DOCKER_NODE_IMAGE=vmware/opensource/$(NODE_BINARY)
+DOCKER_NODE_IMAGE=vmware/opensource
 
-docker: build docker_build
-
-docker_build:
+docker_tracer:
 	docker build \
-		-f Dockerfile \
+		-f cmd/$(BIN_TRACER)/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
-		-t $(DOCKER_NODE_IMAGE):$(GIT_SHA) \
+		-t $(DOCKER_NODE_IMAGE)/$(BIN_TRACER):$(GIT_SHA) \
+		-t $(DOCKER_NODE_IMAGE)/$(BIN_TRACER):latest \
 		.
+docker: docker_tracer
 
 clean:
-	rm -f cmd/$(NODE_BINARY)/$(NODE_BINARY)
+	rm -f cmd/$(BIN_TRACER)/$(BIN_TRACER)
+

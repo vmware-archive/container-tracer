@@ -27,18 +27,19 @@ RUN cd kernel-shark/build && cmake .. && make && make install
 RUN cd trace-cruncher && make && make install
 
 # Install the trace-cruncher api
-# The four copy commands are, as far as I can tell, necessary,
+# The five copy commands are, as far as I can tell, necessary,
 # as Docker only copies directory contents when you don't provide a dest path
 WORKDIR trace-cruncher-api
 COPY api api
 COPY cmd cmd
 COPY internal internal
 COPY go.mod go.sum ./
-RUN go build -o tracer-node ./cmd/tracer-node/
+COPY Makefile Makefile ./
+RUN make tracer
 
 WORKDIR /tracer
 COPY trace-hooks trace-hooks
-RUN cp /build/trace-cruncher-api/tracer-node .
+RUN cp /build/trace-cruncher-api/cmd/tracer-node/tracer-node .
 
 # Remove build dependencies; run build with --squash to reduce image size
 RUN rm -rf /build
@@ -47,7 +48,7 @@ RUN rm -rf /go
 RUN rm -rf /usr/local/go
 RUN rm -rf /root/.cache/*
 RUN pip3 uninstall pkgconfig -y \
-	&& apt remove build-essential cmake python3-pip libpython3-dev flex valgrind \
+	&& apt remove build-essential git cmake python3-pip libpython3-dev flex valgrind \
 		binutils-dev libzstd-dev libaudit-dev pkg-config swig curl -y \
 	&& apt autoremove -y
 EXPOSE 8080/tcp
