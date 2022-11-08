@@ -18,11 +18,11 @@ var (
 // map request path to logic
 func NewRouter(t *ctx.TraceKube) *gin.Engine {
 	router := gin.Default()
-	router.GET("/"+apiVersion+"/pods", t.PodsGet)
-	router.GET("/"+apiVersion+"/trace-hooks", t.TraceHooksGet)
-	router.POST("/"+apiVersion+"/trace-session", t.TraceSessionPost)
-	router.GET("/"+apiVersion+"/trace-session/:id", t.TraceSessionGet)
-	router.PUT("/"+apiVersion+"/trace-session/:id", t.TraceSessionPut)
-	router.DELETE("/"+apiVersion+"/trace-session/:id", t.TraceSessionDel)
+	router.GET("/"+apiVersion+"/pods", t.ProxyAllMap)
+	router.GET("/"+apiVersion+"/trace-hooks", t.ProxyAnyMap)
+	router.POST("/"+apiVersion+"/trace-session", t.ProxyAllMap)
+	router.GET("/"+apiVersion+"/trace-session/:id", t.ProxyAllMap)
+	router.PUT("/"+apiVersion+"/trace-session/:id", t.ProxyAllMap)
+	router.DELETE("/"+apiVersion+"/trace-session/:id", t.ProxyAllMap)
 	return router
 }
