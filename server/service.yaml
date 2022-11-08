@@ -1,4 +1,33 @@
 apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pod-reader
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  namespace: default
+  name: pod-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "nodes", "endpoints"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+ name: pod-reader
+subjects:
+- kind: ServiceAccount
+  name: pod-reader
+  namespace: default
+roleRef:
+ kind: ClusterRole
+ name: pod-reader
+ apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: trace-kube-api
@@ -39,6 +68,8 @@ spec:
       labels:
         app: trace-kube-frontend
     spec:
+      serviceAccountName: pod-reader
+      automountServiceAccountToken: true
       containers:
       - name: trace-kube
         image: vmware/opensource/trace-kube/tracer-svc:latest
@@ -58,6 +89,8 @@ spec:
       labels:
         app: trace-kube-backend
     spec:
+      serviceAccountName: pod-reader
+      automountServiceAccountToken: true
       containers:
       - name: trace-kube
         image: vmware/opensource/trace-kube/tracer-node:latest
