@@ -9,6 +9,7 @@ package tracerctx
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -71,7 +72,6 @@ func (t *Tracer) TraceSessionPut(c *gin.Context) {
 // create a trace session
 func (t *Tracer) TraceSessionPost(c *gin.Context) {
 	var s sessionNew
-	resp := traceSessionInfo{}
 
 	if err := c.BindJSON(&s); err != nil {
 		c.JSON(http.StatusBadRequest, err.Error())
@@ -80,11 +80,13 @@ func (t *Tracer) TraceSessionPost(c *gin.Context) {
 
 	if id, err := t.newSession(&s); err != nil {
 		c.JSON(http.StatusNotFound, err)
-	} else if info, err := t.getSessionInfo(id); err == nil {
-		resp = *info
-		c.JSON(http.StatusOK, resp)
 	} else {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		sid := strconv.FormatUint(id, 10)
+		if info, err := t.getSession(&sid, false); err == nil {
+			c.JSON(http.StatusOK, *info)
+		} else {
+			c.JSON(http.StatusInternalServerError, err.Error())
+		}
 	}
 }
 

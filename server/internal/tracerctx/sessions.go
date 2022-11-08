@@ -34,7 +34,7 @@ type sessionChange struct {
 }
 
 type traceSessionInfo struct {
-	Id          uint64
+	Id          string
 	Context     *string
 	Containers  map[string][]*string
 	TraceHook   *string
@@ -87,7 +87,7 @@ func (t *Tracer) getSessionInfo(id uint64) (*traceSessionInfo, error) {
 		TraceParams: &s.tHookParam,
 		Context:     s.userContext,
 		Containers:  make(map[string][]*string),
-		Id:          id,
+		Id:          strconv.FormatUint(id, 10),
 	}
 
 	if s.tHookSession != nil {
@@ -163,15 +163,16 @@ func (t *Tracer) startSession(id uint64) error {
 func (t *Tracer) stopSession(id uint64) error {
 	var s *traceSession
 	var ok bool
+	var err error = nil
 
 	if s, ok = t.sessions.all[id]; !ok {
 		return fmt.Errorf("No session with ID %d", id)
 	}
-	if s.tHookSession == nil {
-		return fmt.Errorf("Tracing session is not started")
+
+	if s.tHookSession != nil {
+		err = t.hooks.Stop(s.tHookSession, true)
+		s.tHookSession = nil
 	}
-	err := t.hooks.Stop(s.tHookSession, true)
-	s.tHookSession = nil
 
 	return err
 }
@@ -203,8 +204,8 @@ func (t *Tracer) destroySession(id *string) error {
 	return err
 }
 
-func (t *Tracer) getSession(id *string, running bool) (*[]*traceSessionInfo, error) {
-	res := []*traceSessionInfo{}
+func (t *Tracer) getSession(id *string, running bool) (*map[string]*traceSessionInfo, error) {
+	res := make(map[string]*traceSessionInfo)
 
 	if *id == "all" {
 		for i, s := range t.sessions.all {
@@ -214,7 +215,7 @@ func (t *Tracer) getSession(id *string, running bool) (*[]*traceSessionInfo, err
 			if info, err := t.getSessionInfo(i); err != nil {
 				continue
 			} else {
-				res = append(res, info)
+				res[info.Id] = info
 			}
 		}
 	} else {
@@ -224,7 +225,7 @@ func (t *Tracer) getSession(id *string, running bool) (*[]*traceSessionInfo, err
 			if info, e := t.getSessionInfo(n); e != nil {
 				return nil, e
 			} else if !running || running == info.Running {
-				res = append(res, info)
+				res[info.Id] = info
 			}
 		}
 	}
