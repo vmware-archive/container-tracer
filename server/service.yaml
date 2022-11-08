@@ -125,7 +125,7 @@ spec:
           name: vrun
         ports:
         - containerPort: 8080
-      hostNetwork: true
+      hostNetwork: flase
       hostPID: true
       volumes:
       - hostPath:
