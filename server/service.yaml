@@ -47,11 +47,13 @@ metadata:
 spec:
   selector:
     app: trace-kube-backend
-  ports:
-    - port: 8080
-      targetPort: 8080
-      protocol: TCP
+  clusterIP: None
+  clusterIPs:
+     - None
   type: ClusterIP
+  ports:
+   - port: 8080
+     targetPort: 8080
 ---
 apiVersion: apps/v1
 kind: Deployment
