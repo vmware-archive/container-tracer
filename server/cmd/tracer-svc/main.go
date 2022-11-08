@@ -10,17 +10,25 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"time"
 
 	api "gitlab.eng.vmware.com/opensource/tracecruncher-api/api/svc"
 	ctx "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracesvcctx"
 )
 
 var (
-	description = "trace-kube service"
-	envAddress  = "TRACE_KUBE_API_ADDRESS"
-	envVerbose  = "TRACE_KUBE_VERBOSE"
+	description     = "trace-kube service"
+	envAddress      = "TRACE_KUBE_API_ADDRESS"
+	envVerbose      = "TRACE_KUBE_VERBOSE"
+	envTracersPoll  = "TRACE_KUBE_DISCOVERY_POLL"
+	envPodsSelector = "TRACE_KUBE_SELECTOR_PODS"
+	envSvcSelector  = "TRACE_KUBE_SELECTOR_SVCS"
 
-	defAddress = ":8080"
+	defAddress     = ":8080"
+	defPoll        = 10
+	defPodSelector = "app=trace-kube-backend"
+	defSvcSelector = "metadata.name=trace-kube-node"
 )
 
 func usage() {
@@ -35,8 +43,14 @@ func getConfig() (*ctx.TraceKubeConfig, *string) {
 	flApiAddr := flag.String("address", "",
 		fmt.Sprintf("IP address and port in format IP:port, used for listening for incoming API requests.Can be passed using %s environment variable as well",
 			envAddress))
+	tracersPoll := flag.Int("poll", -1,
+		fmt.Sprintf("Polling interval for tracers discovery, in seconds. Can be passed using %s environment variable as well.", envTracersPoll))
 	cfg.Verbose = flag.Bool("verbose", false,
 		fmt.Sprintf("Print informational logs on the standard output. Can be passed using %s environment variable as well.", envVerbose))
+	cfg.PodSelector = flag.String("pods-selector", "",
+		fmt.Sprintf("Label selector for filtering node tracer pods. Can be passed using %s environment variable as well.", envPodsSelector))
+	cfg.SvcSelector = flag.String("svc-selector", "",
+		fmt.Sprintf("Field selector for filtering node tracer services. Can be passed using %s environment variable as well.", envSvcSelector))
 
 	flag.Parse()
 
@@ -47,6 +61,36 @@ func getConfig() (*ctx.TraceKubeConfig, *string) {
 	if *flApiAddr == "" {
 		flApiAddr = &defAddress
 	}
+
+	if *cfg.PodSelector == "" {
+		a := os.Getenv(envPodsSelector)
+		cfg.PodSelector = &a
+	}
+	if *cfg.PodSelector == "" {
+		cfg.PodSelector = &defPodSelector
+	}
+
+	if *cfg.SvcSelector == "" {
+		a := os.Getenv(envSvcSelector)
+		cfg.SvcSelector = &a
+	}
+	if *cfg.SvcSelector == "" {
+		cfg.SvcSelector = &defSvcSelector
+	}
+
+	if *tracersPoll < 0 {
+		if a, e := os.LookupEnv(envTracersPoll); e == true {
+			if i, e := strconv.Atoi(a); e == nil {
+				tracersPoll = &i
+			} else {
+				tracersPoll = &defPoll
+			}
+		} else {
+			tracersPoll = &defPoll
+		}
+	}
+	cfg.TracersPoll = time.Duration(*tracersPoll) * time.Second
+
 	if *cfg.Verbose == false {
 		if _, ok := os.LookupEnv(envVerbose); ok {
 			a := true

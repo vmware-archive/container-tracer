@@ -75,6 +75,13 @@ spec:
       containers:
       - name: trace-kube
         image: vmware/opensource/trace-kube/tracer-svc:latest
+        env:
+        - name: TRACE_KUBE_DISCOVERY_POLL
+          value: "30"
+        - name: TRACE_KUBE_SELECTOR_PODS
+          value: "app=trace-kube-backend"
+        - name: TRACE_KUBE_SELECTOR_SVCS
+          value: "metadata.name=trace-kube-node"
         ports:
         - containerPort: 8080
 ---
