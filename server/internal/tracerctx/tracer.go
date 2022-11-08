@@ -8,7 +8,9 @@ package tracerctx
 
 import (
 	"fmt"
+	"hash/fnv"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/pods"
@@ -28,11 +30,18 @@ type TracerConfig struct {
 	Pod      pods.PodConfig       /* User configuration, specific to pods database */
 }
 
+func setRandomSeed(nodeName *string) {
+	h := fnv.New64a()
+	h.Write([]byte(*nodeName))
+	h.Write([]byte(strconv.FormatInt(time.Now().Unix(), 10)))
+	rand.Seed(int64(h.Sum64()))
+}
+
 func NewTracer(cfg *TracerConfig) (*Tracer, error) {
 	var err error
 	tr := Tracer{}
 
-	rand.Seed(time.Now().Unix())
+	setRandomSeed(cfg.NodeName)
 
 	if tr.pods, err = pods.NewPodDb(&cfg.Pod, cfg.Hook.Procfs); err != nil {
 		return nil, err
