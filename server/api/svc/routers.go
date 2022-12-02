@@ -8,6 +8,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"gitlab.eng.vmware.com/opensource/tracecruncher-api/api"
 	ctx "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracesvcctx"
 )
 
@@ -17,7 +18,7 @@ var (
 
 // map request path to logic
 func NewRouter(t *ctx.TraceKube) *gin.Engine {
-	router := gin.Default()
+	router := api.Router.SetupRouter()
 	router.GET("/"+apiVersion+"/pods", t.ProxyAllMap)
 	router.GET("/"+apiVersion+"/trace-hooks", t.ProxyAnyMap)
 	router.POST("/"+apiVersion+"/trace-session", t.ProxyAllMap)
