@@ -19,7 +19,8 @@ service:
 build: tracer service
 
 GIT_SHA=$(shell git rev-parse HEAD)
-DOCKER_NODE_IMAGE=vmware/opensource/trace-kube
+DOCKER_REPO=
+DOCKER_IMAGE=$(DOCKER_REPO)vmware/opensource/trace-kube
 
 docker_tracer:
 	docker build \
@@ -27,16 +28,16 @@ docker_tracer:
 		--build-arg TRACE_CRUNCER_URL=${TRACE_CRUNCER_URL} \
 		--build-arg TRACE_CRUNCER_VER=${TRACE_CRUNCER_VER} \
 		--label "git_sha=$(GIT_SHA)" \
-		-t $(DOCKER_NODE_IMAGE)/$(BIN_TRACER):$(GIT_SHA) \
-		-t $(DOCKER_NODE_IMAGE)/$(BIN_TRACER):latest \
+		-t $(DOCKER_IMAGE)/$(BIN_TRACER):$(GIT_SHA) \
+		-t $(DOCKER_IMAGE)/$(BIN_TRACER):latest \
 		.
 
 docker_service:
 	docker build \
 		-f cmd/$(BIN_SVC)/Dockerfile \
 		--label "git_sha=$(GIT_SHA)" \
-		-t $(DOCKER_NODE_IMAGE)/$(BIN_SVC):$(GIT_SHA) \
-		-t $(DOCKER_NODE_IMAGE)/$(BIN_SVC):latest \
+		-t $(DOCKER_IMAGE)/$(BIN_SVC):$(GIT_SHA) \
+		-t $(DOCKER_IMAGE)/$(BIN_SVC):latest \
 		.
 
 docker: docker_tracer docker_service
