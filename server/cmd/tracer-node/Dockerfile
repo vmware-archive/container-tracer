@@ -11,13 +11,14 @@ RUN apt update \
 		binutils-dev libzstd-dev libaudit-dev pkg-config \
 		swig curl -y \
 && pip3 install pkgconfig GitPython
-# Download the latest git-snapshot tool from the trace-cruncher GitHub
-# Then use it to download a snapshot of trace-cruncher and its dependencies (defined in repos)
+# Download the git-snapshot tool from the trace-cruncher GitHub and
+# use it to download a snapshot of trace-cruncher dependencies (defined in repos)
+ARG TRACE_CRUNCER_URL=https://github.com/vmware/trace-cruncher
+ARG TRACE_CRUNCER_VER=tracecruncher
 WORKDIR /build
-RUN curl -o git-snapshot.sh https://raw.githubusercontent.com/vmware/trace-cruncher/tracecruncher/scripts/git-snapshot/git-snapshot.sh &&\
-curl -o repos https://raw.githubusercontent.com/vmware/trace-cruncher/tracecruncher/scripts/git-snapshot/repos &&\
-bash ./git-snapshot.sh -l -i "trace-cruncher;https://github.com/vmware/trace-cruncher.git;tracecruncher;" &&\
-bash ./git-snapshot.sh -f repos
+RUN git clone ${TRACE_CRUNCER_URL} --branch ${TRACE_CRUNCER_VER}
+RUN cp ./trace-cruncher/scripts/git-snapshot/* . && bash ./git-snapshot.sh -f ./repos
+
 # Build kernel tracing libs
 RUN cd libtraceevent && make && make install
 RUN cd libtracefs && make && make install

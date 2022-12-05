@@ -6,6 +6,8 @@ GO = CGO_ENABLED=0 GO111MODULE=on GOOS=linux go
 
 BIN_TRACER=tracer-node
 BIN_SVC=tracer-svc
+TRACE_CRUNCER_URL=https://github.com/vmware/trace-cruncher
+TRACE_CRUNCER_VER=tracecruncher-v0.3.0
 
 all: build
 
@@ -22,6 +24,8 @@ DOCKER_NODE_IMAGE=vmware/opensource/trace-kube
 docker_tracer:
 	docker build \
 		-f cmd/$(BIN_TRACER)/Dockerfile \
+		--build-arg TRACE_CRUNCER_URL=${TRACE_CRUNCER_URL} \
+		--build-arg TRACE_CRUNCER_VER=${TRACE_CRUNCER_VER} \
 		--label "git_sha=$(GIT_SHA)" \
 		-t $(DOCKER_NODE_IMAGE)/$(BIN_TRACER):$(GIT_SHA) \
 		-t $(DOCKER_NODE_IMAGE)/$(BIN_TRACER):latest \
