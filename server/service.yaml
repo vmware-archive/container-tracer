@@ -110,6 +110,8 @@ spec:
           value: "/host/sys"
         - name: TRACER_RUN_PATHS
           value: "/host/run, /host/var/run"
+        - name: TRACER_JEAGER_ENDPOINT
+          value: "auto"
         - name: TRACER_NODE_NAME
           valueFrom:
             fieldRef:

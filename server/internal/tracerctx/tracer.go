@@ -7,12 +7,14 @@
 package tracerctx
 
 import (
+	"context"
 	"fmt"
 	"hash/fnv"
 	"math/rand"
 	"strconv"
 	"time"
 
+	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/logger"
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/pods"
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracehook"
 )
@@ -21,6 +23,8 @@ type Tracer struct {
 	pods     *pods.PodDb
 	hooks    *tracehook.TraceHooks
 	sessions *sessionDb
+	logger   *logger.Logger
+	node     *string
 }
 
 type TracerConfig struct {
@@ -28,6 +32,7 @@ type TracerConfig struct {
 	Verbose  *bool                /* Print informational logs on the standard output. */
 	Hook     tracehook.HookConfig /* User configuration, specific to trace-hooks database */
 	Pod      pods.PodConfig       /* User configuration, specific to pods database */
+	Logger   logger.LoggerConfig  /* User configuration, specific to trace logger */
 }
 
 func setRandomSeed(nodeName *string) {
@@ -37,9 +42,11 @@ func setRandomSeed(nodeName *string) {
 	rand.Seed(int64(h.Sum64()))
 }
 
-func NewTracer(cfg *TracerConfig) (*Tracer, error) {
+func NewTracer(ctx context.Context, cfg *TracerConfig) (*Tracer, error) {
 	var err error
-	tr := Tracer{}
+	tr := Tracer{
+		node: cfg.NodeName,
+	}
 
 	setRandomSeed(cfg.NodeName)
 
@@ -54,5 +61,13 @@ func NewTracer(cfg *TracerConfig) (*Tracer, error) {
 		return nil, fmt.Errorf("Failed to create new session database")
 	}
 
+	if tr.logger, err = logger.NewLogger(ctx, &cfg.Logger); err != nil {
+		return nil, err
+	}
+
 	return &tr, nil
+}
+
+func (t *Tracer) Destroy() {
+	t.logger.Destroy()
 }

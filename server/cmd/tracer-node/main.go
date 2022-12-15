@@ -7,6 +7,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -14,12 +15,14 @@ import (
 	"strings"
 
 	api "gitlab.eng.vmware.com/opensource/tracecruncher-api/api/node"
+	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/logger"
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/pods"
 	hooks "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracehook"
-	ctx "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracerctx"
+	trace "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracerctx"
 )
 
 var (
+	appName     = "trace-kube"
 	description = "Trace containers running on the local node."
 	envAddress  = "TRACER_API_ADDRESS"
 	envVerbose  = "TRACER_VERBOSE"
@@ -62,9 +65,9 @@ func (arr *stringsFlag) Set(s string) error {
 	return nil
 }
 
-func getConfig() (*ctx.TracerConfig, *string) {
+func getConfig() (*trace.TracerConfig, *string) {
 	var runPathsArg stringsFlag
-	cfg := ctx.TracerConfig{}
+	cfg := trace.TracerConfig{}
 
 	flApiAddr := flag.String("address", "",
 		fmt.Sprintf("IP address and port in format IP:port, used for listening for incoming API requests.Can be passed using %s environment variable as well",
@@ -89,6 +92,9 @@ func getConfig() (*ctx.TracerConfig, *string) {
 		fmt.Sprintf("Name of the tracer pod, used to verify the CRI endpoint. Can be passed using %s environment variable as well.", pods.EnvPodName))
 	cfg.Pod.ForceProc = flag.Bool("use-procfs", false,
 		fmt.Sprintf("Force using procfs for containers discovery, even if CRI is available. Can be passed using %s environment variable as well.", pods.EnvForceProcfs))
+
+	cfg.Logger.JaegerEndpoint = flag.String("jaeger-endpoint", "",
+		fmt.Sprintf("URL or name of the jaeger endpoint service, used to send collected traces. Can be passed using %s environment variable as well.", logger.EnvLoggerJaegerEndpoint))
 
 	flag.Parse()
 
@@ -140,6 +146,13 @@ func getConfig() (*ctx.TracerConfig, *string) {
 		a := os.Getenv(pods.EnvPodName)
 		cfg.Pod.Cri.PodName = &a
 	}
+
+	cfg.Logger.Name = appName
+	if *cfg.Logger.JaegerEndpoint == "" {
+		a := os.Getenv(logger.EnvLoggerJaegerEndpoint)
+		cfg.Logger.JaegerEndpoint = &a
+	}
+
 	if len(runPathsArg) == 0 {
 		runPathsArg.Set(os.Getenv(pods.EnvRunPaths))
 	}
@@ -150,17 +163,21 @@ func getConfig() (*ctx.TracerConfig, *string) {
 
 func main() {
 	var (
-		t   *ctx.Tracer
+		t   *trace.Tracer
 		err error
 	)
 
 	flag.Usage = usage
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	cfg, addr := getConfig()
-	if t, err = ctx.NewTracer(cfg); err != nil {
+	if t, err = trace.NewTracer(ctx, cfg); err != nil {
 		log.Fatal("Failed to create new tracer: ", err)
 		return
 	}
+	defer t.Destroy()
 
 	router := api.NewRouter(t)
 

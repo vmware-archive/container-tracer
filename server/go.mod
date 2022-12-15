@@ -6,7 +6,12 @@ replace gitlab.eng.vmware.com/opensource/tracecruncher-api => ./
 
 require (
 	github.com/gin-gonic/gin v1.8.1
-	golang.org/x/sys v0.0.0-20220712014510-0a85c31ab51e
+	go.opentelemetry.io/otel v1.11.2
+	go.opentelemetry.io/otel/exporters/jaeger v1.11.2
+	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.11.2 // indirect
+	go.opentelemetry.io/otel/sdk v1.11.2
+	go.opentelemetry.io/otel/trace v1.11.2 // indirect
+	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8
 	k8s.io/api v0.24.0 // indirect
 	k8s.io/apimachinery v0.24.0 // indirect
 	k8s.io/client-go v1.5.2 // indirect

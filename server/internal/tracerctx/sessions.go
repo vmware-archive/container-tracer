@@ -12,13 +12,16 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 
+	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/logger"
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/pods"
 	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracehook"
 )
 
 var (
-	idGenRetries = 100
+	idGenRetries        = 100
+	sessionStartTimeout = 50
 )
 
 type sessionNew struct {
@@ -36,6 +39,7 @@ type sessionChange struct {
 type traceSessionInfo struct {
 	Id          string
 	Context     *string
+	Node        *string
 	Containers  map[string][]*string
 	TraceHook   *string
 	TraceParams *[]string
@@ -45,10 +49,12 @@ type traceSessionInfo struct {
 }
 
 type traceSession struct {
+	pod          *string
 	containers   []*pods.Container
 	tHook        *tracehook.TraceHook
 	tHookParam   []string
 	userContext  *string
+	log          logger.LogJob
 	tHookSession *tracehook.Session
 }
 
@@ -88,6 +94,7 @@ func (t *Tracer) getSessionInfo(id uint64) (*traceSessionInfo, error) {
 		Context:     s.userContext,
 		Containers:  make(map[string][]*string),
 		Id:          strconv.FormatUint(id, 10),
+		Node:        t.node,
 	}
 
 	if s.tHookSession != nil {
@@ -110,6 +117,7 @@ func (t *Tracer) newSession(s *sessionNew) (uint64, error) {
 	ts := traceSession{
 		tHookParam:  []string{},
 		userContext: &s.TraceUserContext,
+		pod:         &s.Pod,
 	}
 
 	for _, w := range strings.Fields(s.TraceArguments) {
@@ -134,6 +142,7 @@ func (t *Tracer) newSession(s *sessionNew) (uint64, error) {
 
 func (t *Tracer) startSession(id uint64) error {
 	var s *traceSession
+	var stdout, stderr *[]string
 	var ok bool
 	var err error
 
@@ -156,6 +165,28 @@ func (t *Tracer) startSession(id uint64) error {
 	} else {
 		s.tHookSession, err = t.hooks.Run(s.tHook, &pids, nil, &s.tHookParam, s.userContext)
 	}
+	if err == nil {
+		sid := strconv.FormatUint(id, 10)
+		s.log = logger.LogJob{
+			Name:    *s.userContext,
+			Node:    *t.node,
+			Pod:     *s.pod,
+			Job:     s.tHook.Name,
+			Session: sid,
+		}
+
+		for i := 0; i < sessionStartTimeout; i++ {
+			stdout, stderr = s.tHookSession.GetOutput()
+			if len(*stderr) > 0 || len(*stdout) > 0 {
+				break
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+		if len(*stderr) < 1 && len(*stdout) > 0 {
+			s.log.File = (*stdout)[0]
+			t.logger.RunLogJob(&s.log)
+		}
+	}
 
 	return err
 }
@@ -172,6 +203,7 @@ func (t *Tracer) stopSession(id uint64) error {
 	if s.tHookSession != nil {
 		err = t.hooks.Stop(s.tHookSession, true)
 		s.tHookSession = nil
+		t.logger.StopLogJob(&s.log)
 	}
 
 	return err
