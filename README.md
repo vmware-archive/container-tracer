@@ -64,7 +64,7 @@ but before that there are three important steps:
        `image: my.docker.repo/vmware/opensource/trace-kube/tracer-svc:latest`  
        `image: my.docker.repo/vmware/opensource/trace-kube/tracer-node:latest`  
 - Build the docker images `make docker`  
-- Push the build images to the repository:  
+- Push the built images to the repository:  
   `docker push my.docker.repo/vmware/opensource/trace-kube/tracer-svc:latest`  
   `docker push my.docker.repo/vmware/opensource/trace-kube/tracer-node:latest`  
 - Deploy `trace-kube` on the Kubernetes cluster:  
@@ -73,8 +73,16 @@ but before that there are three important steps:
   a `tracer-svc` pod, which serves the REST API.
 
 ## Documentation
-Look at the [docs](docs) folder. There is a detailed explanation of the trace-kube architecture
-and description of the REST API. 
+Look at the [trace-kube documentation](docs) for a detailed explanation of the trace-kube architecture
+and description of the REST API.  
+Index of available documentation:
+- [trace-kube overview](docs/trace-kube.md)
+- [trace-kube-api](docs/trace-kube-api.md)
+- [trace-kube-flow](docs/trace-kube-flow.md)
+- [tracer-node](docs/tracer-node.md)
+- [tracer-svc](docs/tracer-svc.md)
+- [trace-hooks desription](docs/trace-hooks.md)
+- [ftrace hooks](trace-hooks/ftrace/README.md)
 
 ## Contributing
 The trace-kube project team welcomes contributions from the community. For more detailed information, refer to [CONTRIBUTING.md](CONTRIBUTING.md).
