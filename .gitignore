@@ -1,2 +1,3 @@
-server/cmd/tracer/trace-kube
+cmd/tracer-node/tracer-node
+cmd/tracer-svc/tracer-svc
 __pycache__
