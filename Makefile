@@ -19,8 +19,8 @@ service:
 build: tracer service
 
 GIT_SHA=$(shell git rev-parse HEAD)
-DOCKER_REPO=
-DOCKER_IMAGE=$(DOCKER_REPO)vmware/opensource/trace-kube
+DOCKER_REPO=registry.zico.biz/
+DOCKER_IMAGE=$(DOCKER_REPO)vmware-labs/container-tracer
 
 docker_tracer:
 	docker build \

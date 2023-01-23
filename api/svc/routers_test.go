@@ -8,8 +8,8 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"gitlab.eng.vmware.com/opensource/tracecruncher-api/api"
-	ctx "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracesvcctx"
+	"github.com/vmware-labs/container-tracer/api"
+	ctx "github.com/vmware-labs/container-tracer/internal/tracesvcctx"
 	"net/http/httptest"
 	"testing"
 )

@@ -1,4 +1,4 @@
-# trace-kube implementation
+# container-tracer implementation
 Internal implementation of [tracer-node](../docs/tracer-node.md) and [tracer-svc](../docs/tracer-svc.md) modules.
 
 ## tracer-node internals

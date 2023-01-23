@@ -1,5 +1,5 @@
 # trace hooks
-`Trace-kube` uses a set of trace hooks to interact with the tracing infrastructure of
+`Container-tracer` uses a set of trace hooks to interact with the tracing infrastructure of
 the Linux kernel. The trace hooks are responsible to configure a tracing session with
 given context in the kernel and to return a location of a text file, where traces of
 this session are recorded. Usually, this tracing context is a set of PIDs that will be
@@ -27,6 +27,6 @@ must read them and apply this configuration:
 - **TRACER_SYSFS_PATH**: Mount location of the host **/sys** file system.
    If not set, the default **/sys** is used.
 
-`Trace-kube` uses `manager` to auto-discover and run available trace hooks. New types of
+`Container-tracer` uses `manager` to auto-discover and run available trace hooks. New types of
 trace hooks, to a different tracing subsystem, can be added easily by creating a new sub-directory
 in `trace-hooks` and implementing `manager` for them.

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2022 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
  *
- * Frontend handlers of the trace-kube REST API.
+ * Frontend handlers of the container-tracer REST API.
  */
 package tracekubectx
 

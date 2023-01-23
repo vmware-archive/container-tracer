@@ -27,16 +27,13 @@ RUN cd kernel-shark/build && cmake .. && make && make install
 # Install trace-cruncher
 RUN cd trace-cruncher && make && make install
 
-# Install the trace-cruncher api
-# The five copy commands are, as far as I can tell, necessary,
-# as Docker only copies directory contents when you don't provide a dest path
-WORKDIR trace-kube
+WORKDIR container-tracer
 COPY . ./
 RUN make tracer
 
 WORKDIR /tracer
 COPY trace-hooks trace-hooks
-RUN cp /build/trace-kube/cmd/tracer-node/tracer-node .
+RUN cp /build/container-tracer/cmd/tracer-node/tracer-node .
 
 # Remove build dependencies; run build with --squash to reduce image size
 RUN rm -rf /build /root/go /go /usr/local/go /root/.cache/*

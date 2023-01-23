@@ -2,14 +2,14 @@
 /*
  * Copyright (C) 2022 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
  *
- * trace-kube service REST API.
+ * container-tracer service REST API.
  */
 package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"gitlab.eng.vmware.com/opensource/tracecruncher-api/api"
-	ctx "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracesvcctx"
+	"github.com/vmware-labs/container-tracer/api"
+	ctx "github.com/vmware-labs/container-tracer/internal/tracesvcctx"
 )
 
 var (

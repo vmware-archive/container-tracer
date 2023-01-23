@@ -1,7 +1,7 @@
 
-# Contributing to trace-kube
+# Contributing to container-tracer
 
-The trace-kube project team welcomes contributions from the community. All contributions to this repository must be
+The container-tracer project team welcomes contributions from the community. All contributions to this repository must be
 signed. Your signature certifies that you wrote the patch or have the right to pass it on as an open-source patch.
 
 ### Submitting patches

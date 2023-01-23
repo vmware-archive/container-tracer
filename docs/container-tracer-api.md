@@ -1,6 +1,6 @@
-# trace-kube REST API
-![trace-kube-api](trace-kube-api.png)  
-The REST API is the only way to interact with `trace-kube`. It is served by both `tracer-svc`
+# container-tracer REST API
+![container-tracer-api](container-tracer-api.png)  
+The REST API is the only way to interact with `container-tracer`. It is served by both `tracer-svc`
 and `tracer-node` modules.  
 ## Version 1
 ### Get PODs

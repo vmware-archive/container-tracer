@@ -1,5 +1,5 @@
-# trace-kube flow of traces
-![trace-kube-flow](trace-kube-flow.png)  
+# container-tracer flow of traces
+![container-tracer-flow](container-tracer-flow.png)  
 A set of trace hooks is used to interact with the tracing infrastructure of the Linux kernel.
 Look at [trace-hooks](trace-hooks.md) for a complete description of the trace hooks.  
 Typical traces flow is illustrated on the diagram. For interaction with `ftrace`,

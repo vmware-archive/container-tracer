@@ -1,8 +1,8 @@
-module gitlab.eng.vmware.com/opensource/tracecruncher-api
+module github.com/vmware-labs/container-tracer
 
 go 1.16
 
-replace gitlab.eng.vmware.com/opensource/tracecruncher-api => ./
+replace github.com/vmware-labs/container-tracer => ./
 
 require (
 	github.com/gin-gonic/gin v1.8.1

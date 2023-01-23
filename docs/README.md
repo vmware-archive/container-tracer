@@ -1,7 +1,7 @@
 # Index of available documentation:
-- [trace-kube overview](trace-kube.md)
-- [trace-kube-api](trace-kube-api.md)
-- [trace-kube-flow](trace-kube-flow.md)
+- [container-tracer overview](container-tracer.md)
+- [container-tracer-api](container-tracer-api.md)
+- [container-tracer-flow](container-tracer-flow.md)
 - [tracer-node](tracer-node.md)
 - [tracer-svc](tracer-svc.md)
 - [trace-hooks desription](trace-hooks.md)

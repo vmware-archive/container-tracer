@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2022 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
  *
- * Implementation of the trace-kube context, used to tie together all su
+ * Implementation of the container-tracer context, used to tie together all su
  */
 package tracekubectx
 

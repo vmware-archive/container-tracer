@@ -1,18 +1,18 @@
 # tracer-node overview
 ![tracer-node](tracer-node.png)
 ## Architecture
-The `tracer-node` module provides the main trace-kube functionality for containers tracing.
+The `tracer-node` module provides the main container-tracer functionality for containers tracing.
 It has these main components:  
-- A REST API, used to interact with the tracer on that node. Look at [REST API](trace-kube-api.md)
+- A REST API, used to interact with the tracer on that node. Look at [REST API](container-tracer-api.md)
   for description of the API.  
 - Logic for auto-discovery of all pods running on the node. Two different approaches are used
   for this auto-discovery:  
-    - Using the CRI API. This is the preferred approach, when trace-kube runs in a Kubernetes context.  
+    - Using the CRI API. This is the preferred approach, when container-tracer runs in a Kubernetes context.  
     - Using the information from `/proc` file system on the host. If the CRI API is
     not available, this logic is used.  
 - An in-memory database with all pods and containers running on the node. For each container,
   a list of PIDs is stored into the database, as seen in the host PID namespace.  
-- A list of [trace-hooks](trace-kube-hooks.md), available in the `tracer-node`.  
+- A list of [trace-hooks](container-tracer-hooks.md), available in the `tracer-node`.  
 - An in-memory database with configured trace sessions. A trace session is a set of containers,
   trace hook and trace parameters which has a state - running or stopped. When running, the trace
   hook is attached to the specified containers.  

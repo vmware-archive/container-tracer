@@ -1,10 +1,10 @@
 # tracer-svc overview
 ![tracer-svc](tracer-svc.png)
 ## Architecture
-The `tracer-svc` module is a proxy service, used to expose the REST API when trace-kube runs in
+The `tracer-svc` module is a proxy service, used to expose the REST API when container-tracer runs in
 a Kubernetes context. It has these main components:  
 - A REST API, used to interact with all `tracer-node` modules in the cluster. Look at
-  [REST API](trace-kube-api.md) for description of the API.  
+  [REST API](container-tracer-api.md) for description of the API.  
 - An in-memory database with all `tracer-node` pods in the cluster.  
 - Logic for auto-discovery of `tracer-node` pods in the cluster. It runs periodically in
   the background, detects any changes and updates the database.  
@@ -18,8 +18,8 @@ On startup, `tracer-svc` checks for specific environment variables and accepts t
 - `--poll` or `TRACE_KUBE_DISCOVERY_POLL`:  Polling interval for `tracer-node` discovery, in seconds. By default
   the discovery logic is triggered on every 10 seconds.  
 - `--pods-selector` or `TRACE_KUBE_SELECTOR_PODS`: Label selector for filtering `tracer-node` pods. By default
-  `app=trace-kube-backend` is used. This label is used in the auto-discovery logic.  
+  `app=container-tracer-backend` is used. This label is used in the auto-discovery logic.  
 - `--svc-selector` or `TRACE_KUBE_SELECTOR_SVCS`: Field selector for filtering `tracer-node` service. By default
-  `metadata.name=trace-kube-node` is used. This selector is used in the auto-discovery logic.  
+  `metadata.name=container-tracer-node` is used. This selector is used in the auto-discovery logic.  
 - `--verbose` or `TRACE_KUBE_VERBOSE`: Dump more detailed logs, disabled by default.  
 If both input argument and environment variable for a same setting exist, only the input argument is taken.

@@ -4,6 +4,39 @@
  * Copyright (C) 2022 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
  *
  */
+
+/*
+   -address string
+		IP address and port in format IP:port, used for listening for incoming API requests.
+		Can be passed using TRACER_API_ADDRESS environment variable as well
+  -cri-endpoint string
+		Path to the CRI endpoint. Can be passed using TRACER_CRI_ENDPOINT environment variable as well.
+  -jaeger-endpoint string
+		URL or name of the jaeger endpoint service, used to send collected traces.
+		Can be passed using TRACER_JEAGER_ENDPOINT environment variable as well.
+  -node-name string
+		Name of the node, which runs that tracer instance.
+		Can be passed using TRACER_NODE_NAME environment variable as well.
+  -pod-name string
+		Name of the tracer pod, used to verify the CRI endpoint.
+		Can be passed using TRACER_POD_NAME environment variable as well.
+  -procfs-path string
+		Path to the /proc fs mount point. Can be passed using TRACER_PROCFS_PATH environment variable as well.
+  -run-path value
+		Path to the run directories, to look for cri endpoints.
+		Can be passed using TRACER_RUN_PATHS environment variable as well.
+  -sysfs-path string
+		Path to the /sys fs mount point. Can be passed using TRACER_SYSFS_PATH environment variable as well.
+  -trace-hooks string
+		Location of the directory with trace helper applications.
+		Can be passed using TRACER_HOOKS environment variable as well.
+  -use-procfs
+		Force using procfs for containers discovery, even if CRI is available.
+		Can be passed using TRACER_FORCE_PROCFS environment variable as well.
+  -verbose
+		Print informational logs on the standard output.
+		Can be passed using TRACER_VERBOSE environment variable as well.
+*/
 package main
 
 import (
@@ -14,15 +47,15 @@ import (
 	"os"
 	"strings"
 
-	api "gitlab.eng.vmware.com/opensource/tracecruncher-api/api/node"
-	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/logger"
-	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/pods"
-	hooks "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracehook"
-	trace "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracerctx"
+	api "github.com/vmware-labs/container-tracer/api/node"
+	"github.com/vmware-labs/container-tracer/internal/logger"
+	"github.com/vmware-labs/container-tracer/internal/pods"
+	hooks "github.com/vmware-labs/container-tracer/internal/tracehook"
+	trace "github.com/vmware-labs/container-tracer/internal/tracerctx"
 )
 
 var (
-	appName     = "trace-kube"
+	appName     = "container-tracer"
 	description = "Trace containers running on the local node."
 	envAddress  = "TRACER_API_ADDRESS"
 	envVerbose  = "TRACER_VERBOSE"

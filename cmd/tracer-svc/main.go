@@ -13,12 +13,12 @@ import (
 	"strconv"
 	"time"
 
-	api "gitlab.eng.vmware.com/opensource/tracecruncher-api/api/svc"
-	ctx "gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracesvcctx"
+	api "github.com/vmware-labs/container-tracer/api/svc"
+	ctx "github.com/vmware-labs/container-tracer/internal/tracesvcctx"
 )
 
 var (
-	description     = "trace-kube service"
+	description     = "container-tracer service"
 	envAddress      = "TRACE_KUBE_API_ADDRESS"
 	envVerbose      = "TRACE_KUBE_VERBOSE"
 	envTracersPoll  = "TRACE_KUBE_DISCOVERY_POLL"
@@ -27,8 +27,8 @@ var (
 
 	defAddress     = ":8080"
 	defPoll        = 10
-	defPodSelector = "app=trace-kube-backend"
-	defSvcSelector = "metadata.name=trace-kube-node"
+	defPodSelector = "app=container-tracer-backend"
+	defSvcSelector = "metadata.name=container-tracer-node"
 )
 
 func usage() {
@@ -111,7 +111,7 @@ func main() {
 
 	cfg, addr := getConfig()
 	if t, err = ctx.NewTraceKube(cfg); err != nil {
-		log.Fatal("Failed to create new trace-kube service: ", err)
+		log.Fatal("Failed to create new container-tracer service: ", err)
 		return
 	}
 

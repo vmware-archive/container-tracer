@@ -14,9 +14,9 @@ import (
 	"strconv"
 	"time"
 
-	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/logger"
-	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/pods"
-	"gitlab.eng.vmware.com/opensource/tracecruncher-api/internal/tracehook"
+	"github.com/vmware-labs/container-tracer/internal/logger"
+	"github.com/vmware-labs/container-tracer/internal/pods"
+	"github.com/vmware-labs/container-tracer/internal/tracehook"
 )
 
 type Tracer struct {
