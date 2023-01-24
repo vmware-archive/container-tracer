@@ -6,8 +6,7 @@ signed. Your signature certifies that you wrote the patch or have the right to p
 
 ### Submitting patches
 
-Patches can be submitted by either:
- 1. Using the regular [Github Flow](https://docs.github.com/en/get-started/quickstart/github-flow):
+Patches can be submitted using the regular [Github Flow](https://docs.github.com/en/get-started/quickstart/github-flow):
     - The main branch is **main**.
     - Any changes must be on a feature branch or on a fork.
     - Tests must pass before merging, and the pull request must be [reviewed](https://docs.github.com/en/github/collaborating-with-pull-requests/reviewing-changes-in-pull-requests) and approved.
