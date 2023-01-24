@@ -1,4 +1,5 @@
 # container-tracer
+
 ## Overview
 The container-tracer project brings the power of the Linux kernel tracing to Kubernetes. It leverages
 existing kernel tracing frameworks such as ftrace, perf, ebpf to trace workloads running on
@@ -6,6 +7,7 @@ a Kubernetes cluster. Designed as a native Kubernetes application, its main goal
 and efficient in doing one thing - collecting low level system traces per container.
 
 ## Try it out
+
 ### Prerequisites
 - Linux kernel with enabled ftrace, perf and ebpf, or at least one of them.
   Almost all of the kernels, shipped with major Linux distributions meet that requirement.  
