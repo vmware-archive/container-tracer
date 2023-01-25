@@ -74,6 +74,9 @@ but before that there are three important steps:
 - If everything is ok, there should be `tracer-node` pods running on each Kubernetes node and
   a `tracer-svc` pod, which serves the REST API.
 
+### Usage
+After installing container-tracer, you can interact with it using a [REST API](docs/container-tracer-api.md).
+
 ## Documentation
 Look at the [container-tracer documentation](docs) for a detailed explanation of the container-tracer architecture
 and description of the REST API.  
