@@ -9,8 +9,8 @@ and efficient in doing one thing - collecting low level system traces per contai
 ## Try it out
 
 ### Prerequisites
-- Linux kernel with enabled ftrace, perf and ebpf, or at least one of them.
-  Almost all of the kernels, shipped with major Linux distributions meet that requirement.  
+- Linux kernel with enabled ftrace. Almost all of the kernels, shipped with major Linux distributions
+  meet that requirement.  
 - Open Telemetry and Jaeger installed on the system / cluster. Although this is not a mandatory
   requirement, it is a good to have. Container-tracer does not store collected traces. All it can do is to
   dump them on the console, or send them to an external database using Open Telemetry.  
@@ -25,23 +25,8 @@ There are different make targets for each of them, so they can be compiled indep
 `make tracer` compiles `cmd/tracer-node/tracer-node`  
 `make service` compiles `cmd/tracer-svc/tracer-svc`  
 
-### Standalone installation
-There is no Makefile target for a standalone installation, please use **Installation via Docker**
-or **Installation on Kubernetes**. However, you can install it by hand:
-- Build `cmd/tracer-node/tracer-node` and copy `tracer-node` binary to desired installation location.  
-- Copy `trace-hooks` directory to desired installation location.
-- Install [trace-cruncher](https://github.com/vmware/trace-cruncher) and all its dependencies.  
-- Run `tracer-node` with root privileges. It needs `trace-hooks` directory and by default looks for it
-  in current directory. You can specify its location using the `TRACER_HOOKS` environment variable or
-  `--trace-hooks` argument:  
-  `tracer-node --trace-hooks <path to trace-hooks directory>`  
-- If everything is ok, it will print the REST API endpoint and available APIs. By default, it listens
-  to port `:8080`.  
-- That's it. Use the REST API to interact with the tracer. It should auto-discover *almost* all containers
-  running on the local system and should be able to run trace session on each of them.
-
 ### Installation via Docker
-There is a Makefile target to build Container-tracer docker images, just run `make docker`. There is no need
+There is a Makefile target to build container-tracer docker images, just run `make docker`. There is no need
 to run `make` before that, it compiles everything needed. Two ready for use Docker images are produced,
 bundled with all dependencies:  
 `vmware-labs/container-tracer/tracer-node`  
@@ -53,10 +38,10 @@ The `vmware-labs/container-tracer/tracer-node` can be used for a container-trace
 it is not part of a cluster:
 - Run a privileged container using `vmware-labs/container-tracer/tracer-node` image.  
 - If everything is ok, the container port `:8080` is exposed and can be used to interact with the tracer,
-  using the REST API.
+  using the [REST API](docs/container-tracer-api.md).
 
 ### Installation on Kubernetes
-Kubernetes is the primary target for container-tracer, There is a Kubernetes deployment file `container-tracer.yaml`,
+Kubernetes is the primary target for container-tracer, there is a Kubernetes deployment file `container-tracer.yaml`,
 but before that there are three important steps:  
 - Set the docker repository for the docker images. As container-tracer is still in its early development
   stage, the images are not optimized yet. That's why no default docker repository is configured:  
@@ -72,7 +57,23 @@ but before that there are three important steps:
 - Deploy `container-tracer` on the Kubernetes cluster:  
   `kubectl apply -f container-tracer.yaml`  
 - If everything is ok, there should be `tracer-node` pods running on each Kubernetes node and
-  a `tracer-svc` pod, which serves the REST API.
+  a `tracer-svc` pod, which serves the [REST API](docs/container-tracer-api.md).
+
+### Standalone installation
+There is no Makefile target for a standalone installation, please use **Installation via Docker**
+or **Installation on Kubernetes**. However, you can install it by hand:
+- Build `cmd/tracer-node/tracer-node` and copy `tracer-node` binary to desired installation location.  
+- Copy `trace-hooks` directory to desired installation location.
+- Install [trace-cruncher](https://github.com/vmware/trace-cruncher) and all its dependencies.  
+- Run `tracer-node` with root privileges. It needs `trace-hooks` directory and by default looks for it
+  in the current directory. You can specify its location using the `TRACER_HOOKS` environment variable or
+  `--trace-hooks` argument:  
+  `tracer-node --trace-hooks <path to the trace-hooks directory>`  
+- If everything is ok, it will print the REST API endpoints and available APIs. By default, it listens
+  to port `:8080`.  
+- That's it. Use the [REST API](docs/container-tracer-api.md) to interact with the tracer. It should
+  auto-discover *almost* all containers running on the local system and should be able to run trace
+  session on each of them.
 
 ### Usage
 After installing container-tracer, you can interact with it using a [REST API](docs/container-tracer-api.md).
