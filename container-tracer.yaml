@@ -74,7 +74,7 @@ spec:
       automountServiceAccountToken: true
       containers:
       - name: container-tracer
-        image: registry.zico.biz/vmware-labs/container-tracer/tracer-svc:latest
+        image: vmware-labs/container-tracer/tracer-svc:latest
         env:
         - name: TRACE_KUBE_DISCOVERY_POLL
           value: "30"
@@ -102,7 +102,7 @@ spec:
       automountServiceAccountToken: true
       containers:
       - name: container-tracer
-        image: registry.zico.biz/vmware-labs/container-tracer/tracer-node:latest
+        image: vmware-labs/container-tracer/tracer-node:latest
         env:
         - name: TRACER_PROCFS_PATH
           value: "/host/proc"
