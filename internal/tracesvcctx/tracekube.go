@@ -48,6 +48,8 @@ type TraceKubeConfig struct {
 	TracersPoll time.Duration /* Polling interval for refreshing the tracers database */
 	PodSelector *string       /* Selector for filtering node tracer pods */
 	SvcSelector *string       /* Selector for filtering node tracer services */
+	TlsKeyFile  *string       /* Path to TLS key file, to run on HTTPS */
+	TlsCertFile *string       /* Path to TLS certificate file, to run on HTTPS */
 }
 
 func (t *TraceKube) discoveryTask() {
