@@ -24,17 +24,40 @@ var (
 	envTracersPoll  = "TRACE_KUBE_DISCOVERY_POLL"
 	envPodsSelector = "TRACE_KUBE_SELECTOR_PODS"
 	envSvcSelector  = "TRACE_KUBE_SELECTOR_SVCS"
+	envTlsKey       = "TRACE_KUBE_TLS_KEY"
+	envTlsCert      = "TRACE_KUBE_TLS_CERT"
 
-	defAddress     = ":8080"
-	defPoll        = 10
-	defPodSelector = "app=container-tracer-backend"
-	defSvcSelector = "metadata.name=container-tracer-node"
+	defHttpAddress  = ":80"
+	defHttpsAddress = ":443"
+	defPoll         = 10
+	defPodSelector  = "app=container-tracer-backend"
+	defSvcSelector  = "metadata.name=container-tracer-node"
 )
 
 func usage() {
 	w := flag.CommandLine.Output()
 	fmt.Fprintf(w, "%s: %s \n\n", os.Args[0], description)
 	flag.PrintDefaults()
+}
+
+func httpsRun(cfg *ctx.TraceKubeConfig) bool {
+	if cfg.TlsCertFile == nil || cfg.TlsKeyFile == nil {
+		return false
+	}
+
+	if f, err := os.OpenFile(*cfg.TlsCertFile, os.O_RDONLY, 0666); err != nil {
+		return false
+	} else {
+		f.Close()
+	}
+
+	if f, err := os.OpenFile(*cfg.TlsKeyFile, os.O_RDONLY, 0666); err != nil {
+		return false
+	} else {
+		f.Close()
+	}
+
+	return true
 }
 
 func getConfig() (*ctx.TraceKubeConfig, *string) {
@@ -45,6 +68,10 @@ func getConfig() (*ctx.TraceKubeConfig, *string) {
 			envAddress))
 	tracersPoll := flag.Int("poll", -1,
 		fmt.Sprintf("Polling interval for tracers discovery, in seconds. Can be passed using %s environment variable as well.", envTracersPoll))
+	tlsCert := flag.String("certfile", "",
+		fmt.Sprintf("Path to TLS certificate file. Can be passed using %s environment variable as well.", envTlsCert))
+	tlsKey := flag.String("keyfile", "",
+		fmt.Sprintf("Path to TLS key file. Can be passed using %s environment variable as well.", envTlsKey))
 	cfg.Verbose = flag.Bool("verbose", false,
 		fmt.Sprintf("Print informational logs on the standard output. Can be passed using %s environment variable as well.", envVerbose))
 	cfg.PodSelector = flag.String("pods-selector", "",
@@ -58,8 +85,23 @@ func getConfig() (*ctx.TraceKubeConfig, *string) {
 		a := os.Getenv(envAddress)
 		flApiAddr = &a
 	}
+
+	if *tlsCert == "" {
+		a := os.Getenv(envTlsCert)
+		cfg.TlsCertFile = &a
+	}
+
+	if *tlsKey == "" {
+		a := os.Getenv(envTlsKey)
+		cfg.TlsKeyFile = &a
+	}
+
 	if *flApiAddr == "" {
-		flApiAddr = &defAddress
+		if httpsRun(&cfg) == true {
+			flApiAddr = &defHttpsAddress
+		} else {
+			flApiAddr = &defHttpAddress
+		}
 	}
 
 	if *cfg.PodSelector == "" {
@@ -117,9 +159,15 @@ func main() {
 
 	router := api.NewRouter(t)
 
-	log.Printf("Listening for incoming API requests at %s", *addr)
+	if httpsRun(cfg) == true {
+		log.Printf("Listening for incoming HTTPS API requests at %s", *addr)
+		err = router.RunTLS(*addr, *cfg.TlsCertFile, *cfg.TlsKeyFile)
+	} else {
+		log.Printf("Listening for incoming HTTP API requests at %s", *addr)
+		err = router.Run(*addr)
+	}
 
-	if err = router.Run(*addr); err != nil {
+	if err != nil {
 		log.Fatal("Failed to run the server:", err)
 	}
 }
