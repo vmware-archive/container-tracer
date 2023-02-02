@@ -87,6 +87,8 @@ spec:
       - name: container-tracer
         image: vmware-labs/container-tracer/tracer-svc:latest
         env:
+        - name: TRACE_KUBE_API_ADDRESS
+          value: ":8080"
         - name: TRACE_KUBE_DISCOVERY_POLL
           value: "30"
         - name: TRACE_KUBE_SELECTOR_PODS
