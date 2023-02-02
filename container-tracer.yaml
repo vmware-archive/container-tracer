@@ -167,3 +167,23 @@ spec:
           path: /var/run
           type: ""
         name: vrun
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tracer-network-policy
+  namespace: contrace
+spec:
+  podSelector:
+    matchLabels:
+      app: container-tracer-backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              app: container-tracer
+          podSelector:
+            matchLabels:
+              app: container-tracer-frontend
