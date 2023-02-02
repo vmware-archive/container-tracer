@@ -1,0 +1,28 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  labels:
+    name: container-tracer
+  name: container-tracer-api-cert
+  namespace: contrace
+spec:
+  dnsNames:
+  - container-tracer-api.svc
+  - container-tracer-api.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: container-tracer-api-selfsigned-issuer
+  secretName: container-tracer-api-tls
+  subject:
+    organizationalUnits:
+    - container-tracer-api
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  labels:
+    name: container-tracer
+  name: container-tracer-api-selfsigned-issuer
+  namespace: contrace
+spec:
+  selfSigned: {}
