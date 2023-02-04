@@ -1,4 +1,5 @@
 # Index of available documentation:
+- [installation](install.md)
 - [container-tracer overview](container-tracer.md)
 - [container-tracer-api](container-tracer-api.md)
 - [container-tracer-flow](container-tracer-flow.md)

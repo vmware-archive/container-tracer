@@ -28,7 +28,7 @@ The format of one entry from the list is:
 
 
 Example request `curl http://<node>:<port>/v1/pods --header "Content-Type: application/json" --request "GET" | jq`
-to get a list of all pods. The entry describing a jaeger operator pod looks like that:
+for a list of all pods. The entry describing a jaeger operator pod looks like this:
 
 ``` shell
 ...
@@ -60,7 +60,7 @@ to get a list of all pods. The entry describing a jaeger operator pod looks like
 ```
 
 ### Get Trace Hooks
-`GET /v1/trace-hooks` Get list of all trace-hooks, available for attaching to a container.
+`GET /v1/trace-hooks` Get a list of all trace-hooks, that can be attached to a container.
 The format of one entry from the list is:
 
 ``` shell
@@ -83,7 +83,7 @@ The format of one entry from the list is:
 ```
 
 Example request `curl http://<node>:<port>/v1/trace-hooks --header "Content-Type: application/json" --request "GET" | jq`
-to get a list of all trace hooks. The entry describing the `trace_syscalls` hook looks like that:
+for a list of all trace hooks. The entry describing the `trace_syscalls` hook looks like this:
 
 ``` shell
 ...
@@ -107,9 +107,9 @@ to get a list of all trace hooks. The entry describing the `trace_syscalls` hook
 
 ### Trace sessions management
 #### Get configured trace sessions
-`GET /v1/trace-session/<id>` Get description of a trace session with specific **id**.
-If **all** is passed as **id**, list of all configured trace sessions is returned. The format of
-returned entry, describing one trace sessions, is:
+`GET /v1/trace-session/<id>` Get a description of a trace session with a specific **id**.
+If **all** is passed as **id**, a list of all configured trace sessions is returned. The format of
+a returned entry, describing one trace sessions, is:
 
 ```shell
 ...
@@ -134,7 +134,7 @@ returned entry, describing one trace sessions, is:
 ```
 
 Example request `curl http://<node>:<port>/v1/trace-session/6903485068587058765 --header "Content-Type: application/json" --request "GET" | jq`
-to get the description of a trace session with id `6903485068587058765`:
+for the description of a trace session with id `6903485068587058765`:
 
 ```shell
 ...
@@ -166,8 +166,8 @@ to get the description of a trace session with id `6903485068587058765`:
 ```
 
 #### Create a new trace session
-`POST /v1/trace-session` Create a new trace session. It requires a mandatory json file with session
-description to be passed as part of this request. The format of this file is:
+`POST /v1/trace-session` Create a new trace session. It requires that a mandatory json file with
+a session description be passed as part of this request. The format of this file is:
 
 ``` shell
 ...
@@ -200,7 +200,7 @@ where the `session.json` file is:
 ```
 
 #### Change state of a trace session
-`PUT /v1/trace-session/<id>` Set the running state of a trace session with given **id**.
+`PUT /v1/trace-session/<id>` Set the running state of a trace session with the given **id**.
 It requires a mandatory json file with the new session state. The format of this file is:
 
 ``` shell
@@ -212,7 +212,7 @@ It requires a mandatory json file with the new session state. The format of this
 ```
 
 If the request is successful, an empty json is returned.  
-Example request to run a trace session with id **6903485068587058765**:  
+Example of a request to run a trace session with id **6903485068587058765**:  
 `curl http://<node>:<port>/v1/trace-session/6903485068587058765 --header "Content-Type: application/json" --request "PUT" -d @run.json | jq`  
 where the `run.json` file is:
 
@@ -228,5 +228,5 @@ where the `run.json` file is:
 `DELETE /v1/trace-session/<id>` Delete a trace session with given **id**. If **all** is passed as **id**,
 all trace sessions will be deleted. If the session is running, it will be stopped before deletion.
 If the request is successful, an empty json is returned.  
-Example request to delete all trace sessions:  
+Example of a request to delete all trace sessions:  
 `curl http://<node>:<port>/v1/trace-session/all --header "Content-Type: application/json" --request "DELETE" | jq`

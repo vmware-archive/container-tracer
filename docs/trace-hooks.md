@@ -4,13 +4,13 @@ the Linux kernel. The trace hooks are responsible to configure a tracing session
 given context in the kernel and to return a location of a text file, where traces of
 this session are recorded. Usually, this tracing context is a set of PIDs that will be
 traced and input arguments, specific to the trace-hook. The trace hooks are located in
-`trace-hooks` directory and are organized into sub-directories. Each sub-directories is
-responsible for a specific trace sub-system of the Linux kernel. There is at least one
+the `trace-hooks` directory and are organized into sub-directories. Each sub-directory
+is responsible for a specific trace sub-system of the Linux kernel. There is at least one
 executable file in each of these sub-directories, called `manager`, which manages all
 trace hooks located in that sub-directory. The `manager` must accept at least these input
 arguments:  
- - **--get-all** : Return list of all user callable trace hooks.
- - **--describe <trace hook name>** : Get user description of given trace hook.
+ - **--get-all** : Return a list of all user callable trace hooks.
+ - **--describe <trace hook name>** : Get a user description of the given trace hook.
  - **--clear** : Reset to default the trace sub-system of the Linux kernel.
  - **--run <trace hook name>** : Run a trace hook, in blocking mode. In case of an error, an error message must
    be printed on the standard error output and the hook must return, without starting any trace session.
