@@ -8,6 +8,7 @@ package pods
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -41,6 +42,7 @@ type pod struct {
 }
 
 type PodDb struct {
+	ctx        context.Context
 	discover   podsDiscover
 	procfsPath *string
 	pods       *map[string]*pod
@@ -114,33 +116,34 @@ func (p *PodDb) GetContainers(podName, containerName *string) []*Container {
 	return res
 }
 
-func getPodDiscover(cfg *PodConfig, procfsPath *string) (podsDiscover, error) {
+func getPodDiscover(ctx context.Context, cfg *PodConfig, procfsPath *string) (podsDiscover, error) {
 	var d podsDiscover
 	var err error
 
 	if cfg.ForceProc != nil && *cfg.ForceProc {
-		return getProcDiscover(procfsPath)
+		return getProcDiscover(ctx, procfsPath)
 	}
 
-	if d, err = getCriDiscover(&cfg.Cri); err == nil {
+	if d, err = getCriDiscover(ctx, &cfg.Cri); err == nil {
 		return d, err
-	} else if d, err = getProcDiscover(procfsPath); err == nil {
+	} else if d, err = getProcDiscover(ctx, procfsPath); err == nil {
 		return d, err
 	}
 
 	return nil, err
 }
 
-func NewPodDb(cfg *PodConfig, procfsPath *string) (*PodDb, error) {
+func NewPodDb(ctx context.Context, cfg *PodConfig, procfsPath *string) (*PodDb, error) {
 
 	ppath := procfsPath
 	if ppath == nil || *ppath == "" {
 		ppath = &procfsPathDefault
 	}
 
-	if d, err := getPodDiscover(cfg, ppath); err == nil {
+	if d, err := getPodDiscover(ctx, cfg, ppath); err == nil {
 		db := &PodDb{
 			discover:   d,
+			ctx:        ctx,
 			procfsPath: ppath,
 		}
 		db.Scan()
