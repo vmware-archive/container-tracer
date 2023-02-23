@@ -14,6 +14,7 @@ package pods
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"io/fs"
 	"os"
@@ -29,6 +30,7 @@ var (
 )
 
 type podProc struct {
+	ctx          context.Context
 	path         string
 	podb         map[string]*pod
 	top_utsns_fd int
@@ -37,8 +39,9 @@ type podProc struct {
 	pids         []int
 }
 
-func getProcDiscover(procfsPath *string) (podsDiscover, error) {
+func getProcDiscover(ctx context.Context, procfsPath *string) (podsDiscover, error) {
 	ctr := podProc{
+		ctx:  ctx,
 		path: *procfsPath,
 		pids: make([]int, 0),
 		podb: make(map[string]*pod),

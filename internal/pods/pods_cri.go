@@ -7,6 +7,7 @@
 package pods
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -44,6 +45,7 @@ type CriConfig struct {
 
 type podCri struct {
 	api  criapi.RuntimeService
+	ctx  context.Context
 	podb map[string]*pod
 }
 
@@ -52,7 +54,7 @@ type podCriInfo struct {
 }
 
 /* Verify if tracer pod is part of this CRI database */
-func criVerify(podName *string, api *criapi.RuntimeService) bool {
+func (p *podCri) criVerify(podName *string, api *criapi.RuntimeService) bool {
 	if podName == nil || *podName == "" || api == nil {
 		return true
 	}
@@ -65,7 +67,7 @@ func criVerify(podName *string, api *criapi.RuntimeService) bool {
 	}
 
 	// Get list of all running containers
-	r, err := (*api).ListContainers(f)
+	r, err := (*api).ListContainers(p.ctx, f)
 	if err != nil {
 		return false
 	}
@@ -86,7 +88,7 @@ func (p *podCri) criConnect(cfg *CriConfig) error {
 	timeout := 100 * time.Millisecond
 
 	if cfg.Endpoint != nil && *cfg.Endpoint != "" {
-		if svc, err := remote.NewRemoteRuntimeService(*cfg.Endpoint, timeout); err != nil {
+		if svc, err := remote.NewRemoteRuntimeService(*cfg.Endpoint, timeout, nil); err != nil {
 			return err
 		} else {
 			p.api = svc
@@ -102,8 +104,8 @@ func (p *podCri) criConnect(cfg *CriConfig) error {
 	for _, pt := range paths {
 		for _, ep := range knownCriEndpoints {
 			sockUrl := socPrefix + pt + "/" + ep
-			svc, err := remote.NewRemoteRuntimeService(sockUrl, timeout)
-			if err == nil && criVerify(cfg.PodName, &svc) {
+			svc, err := remote.NewRemoteRuntimeService(sockUrl, timeout, nil)
+			if err == nil && p.criVerify(cfg.PodName, &svc) {
 				p.api = svc
 				print("\nUsing CRI for pods discovery at ", sockUrl, "\n")
 				return nil
@@ -114,10 +116,11 @@ func (p *podCri) criConnect(cfg *CriConfig) error {
 	return fmt.Errorf("Cannot connect to CRI endpoint")
 }
 
-func getCriDiscover(cfg *CriConfig) (podsDiscover, error) {
+func getCriDiscover(ctx context.Context, cfg *CriConfig) (podsDiscover, error) {
 
 	ctr := podCri{
 		podb: make(map[string]*pod),
+		ctx:  ctx,
 	}
 
 	if err := ctr.criConnect(cfg); err != nil {
@@ -142,7 +145,7 @@ func (p *podCri) getPodInfo(cinfo *pbuf.Container, pname *string) error {
 	}
 	cr := p.podb[*pname].Containers[cinfo.Metadata.Name]
 
-	if s, e := p.api.ContainerStatus(cinfo.Id, true); e == nil {
+	if s, e := p.api.ContainerStatus(p.ctx, cinfo.Id, true); e == nil {
 		i := s.GetInfo()
 		if v, ok := i["info"]; ok {
 			info := podCriInfo{}
@@ -165,7 +168,7 @@ func (p podCri) podScan() (*map[string]*pod, error) {
 		},
 	}
 	// Get list of all running containers
-	r, err := p.api.ListContainers(f)
+	r, err := p.api.ListContainers(p.ctx, f)
 	if err != nil {
 		return nil, err
 	}

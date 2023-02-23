@@ -50,7 +50,7 @@ func NewTracer(ctx context.Context, cfg *TracerConfig) (*Tracer, error) {
 
 	setRandomSeed(cfg.NodeName)
 
-	if tr.pods, err = pods.NewPodDb(&cfg.Pod, cfg.Hook.Procfs); err != nil {
+	if tr.pods, err = pods.NewPodDb(ctx, &cfg.Pod, cfg.Hook.Procfs); err != nil {
 		return nil, err
 	}
 	if tr.hooks, err = tracehook.NewTraceHooksDb(&cfg.Hook); err != nil {
