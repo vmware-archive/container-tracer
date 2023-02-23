@@ -60,7 +60,7 @@ RUN pip3 uninstall pkgconfig -y \
 	&& rm -rf /build /root/.cache/*
 
 COPY --from=build /tracer/cmd/tracer-node/tracer-node .
-COPY --from=build /tracer/trace-hooks .
+COPY --from=build /tracer/trace-hooks ./trace-hooks
 
 EXPOSE 8080/tcp
 ENTRYPOINT ["./tracer-node"]
