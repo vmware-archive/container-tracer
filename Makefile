@@ -2,7 +2,7 @@
 # Copyright (C) 2022 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
 
 .PHONY: build clean docker
-GO = CGO_ENABLED=0 GO111MODULE=on GOOS=linux go
+GO = CGO_ENABLED=0 GOOS=linux go
 
 BIN_TRACER=tracer-node
 BIN_SVC=tracer-svc
