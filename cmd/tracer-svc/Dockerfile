@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2022 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
 
-FROM golang:1.18-bullseye as build
+FROM golang:1.19-bullseye as build
 
 WORKDIR /build/container-tracer
 COPY . ./
