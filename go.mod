@@ -16,7 +16,7 @@ require (
 	k8s.io/apimachinery v0.26.1
 	k8s.io/client-go v1.5.2
 	k8s.io/cri-api v0.26.1
-	k8s.io/kubernetes v1.26.1
+	k8s.io/kubernetes v1.26.6
 )
 
 require (
