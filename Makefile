@@ -7,7 +7,7 @@ GO = CGO_ENABLED=0 GOOS=linux go
 BIN_TRACER=tracer-node
 BIN_SVC=tracer-svc
 TRACE_CRUNCER_URL=https://github.com/vmware/trace-cruncher
-TRACE_CRUNCER_VER=tracecruncher-v0.3.0
+TRACE_CRUNCER_VER=tracecruncher-v0.4.0
 
 all: build
 
