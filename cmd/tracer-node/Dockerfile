@@ -18,9 +18,9 @@ COPY . ./
 RUN make tracer
 
 WORKDIR /build
-ARG TRACE_CRUNCER_URL=https://github.com/vmware/trace-cruncher
-ARG TRACE_CRUNCER_VER=tracecruncher
-RUN git clone ${TRACE_CRUNCER_URL} --branch ${TRACE_CRUNCER_VER} \
+ARG TRACE_CRUNCHER_URL=https://github.com/vmware/trace-cruncher
+ARG TRACE_CRUNCHER_VER=tracecruncher
+RUN git clone ${TRACE_CRUNCHER_URL} --branch ${TRACE_CRUNCHER_VER} \
 	&& cp ./trace-cruncher/scripts/git-snapshot/* . && bash ./git-snapshot.sh -f ./repos 
 
 RUN cd libtraceevent && make && make install \
