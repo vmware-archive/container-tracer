@@ -3,15 +3,14 @@
 # Copyright 2022 VMware Inc, June Knauth (VMware) <june.knauth@gmail.com>
 # Copyright 2023 VMware, Inc. Tzvetomir Stoyanov (VMware) <tz.stoyanov@gmail.com>
 
-FROM golang:1.19-bullseye as build
+FROM golang:1.21-bullseye as build
 
 RUN apt update \
 	&& apt install build-essential git cmake \
-		libjson-c-dev libpython3-dev cython3 \
-		python3-numpy python3-pip flex valgrind \
-		binutils-dev libzstd-dev libaudit-dev pkg-config \
-		swig curl -y \
-	&& pip3 install pkgconfig GitPython 
+		libjson-c-dev libpython3-dev cython3 pkg-config \
+		python3-numpy python3-pkgconfig python3-git python3-setuptools \
+		valgrind binutils-dev libzstd-dev libaudit-dev \
+		flex swig curl -y
 
 WORKDIR /tracer
 COPY . ./
@@ -31,15 +30,14 @@ RUN cd libtraceevent && make && make install \
 
 ####
 
-FROM debian:stable-slim
+FROM debian:bullseye-slim
 
 # Install APT and pip dependencies
 RUN apt update \
 	&& apt install make cmake \
 		libjson-c-dev cython3 libzstd-dev \
-		python3-numpy python3-pip \
-		pkg-config -y \
-	&& pip3 install pkgconfig GitPython
+		python3-numpy python3-pkgconfig python3-git \
+		python3-setuptools pkg-config -y
 
 WORKDIR /build
 COPY --from=build /build .
@@ -52,10 +50,7 @@ RUN cd libtraceevent && make -t && make install \
 
 WORKDIR /tracer
 # Remove build dependencies; run build with --squash to reduce image size
-RUN pip3 uninstall pkgconfig -y \
-	&& apt remove make cmake libzstd-dev \
-		pkg-config -y \
-	&& apt remove python3-pip -y \
+RUN apt remove make cmake libzstd-dev pkg-config python3-git python3-setuptools libjson-c-dev -y \
 	&& apt autoremove -y \
 	&& rm -rf /build /root/.cache/*
 
