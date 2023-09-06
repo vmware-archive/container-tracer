@@ -176,12 +176,14 @@ func (h *TraceHooks) Run(th *TraceHook, pids *[]int, parent *[]int, params *[]st
 		sargs += " " + strconv.Itoa(p)
 	}
 
+	/* temporary disable parent filtering, due to an issue with trace instance deletion
 	if parent != nil {
 		sargs += " --parent"
 		for _, p := range *parent {
 			sargs += " " + strconv.Itoa(p)
 		}
 	}
+	*/
 
 	for _, p := range *params {
 		sargs += " " + p
