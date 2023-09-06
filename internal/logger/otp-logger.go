@@ -42,6 +42,7 @@ type LoggerConfig struct {
 
 type logWorker struct {
 	log    *LogJob
+	span   logger.Span
 	ctx    context.Context
 	cancel context.CancelFunc
 }
@@ -88,12 +89,7 @@ func (l *Logger) readFile(job *logWorker) error {
 		return err
 	}
 	defer f.Close()
-	_, span := l.tracer.Start(job.ctx, job.log.Name)
-	span.SetAttributes(attribute.Key("node").String(job.log.Node))
-	span.SetAttributes(attribute.Key("pod").String(job.log.Pod))
-	span.SetAttributes(attribute.Key("traceJob").String(job.log.Job))
-	span.SetAttributes(attribute.Key("traceSession").String(job.log.Session))
-	defer span.End()
+
 	for {
 		line, err := readLine(f)
 		if err != nil {
@@ -103,7 +99,9 @@ func (l *Logger) readFile(job *logWorker) error {
 		case <-job.ctx.Done():
 			return job.ctx.Err()
 		default:
-			span.AddEvent(string(*line))
+			_, sp := l.tracer.Start(job.ctx, "trace")
+			sp.AddEvent(string(*line))
+			sp.End()
 		}
 	}
 	return fmt.Errorf("Completed reading file", job.log.File)
@@ -112,6 +110,7 @@ func (l *Logger) readFile(job *logWorker) error {
 func (l *Logger) delCompleted() {
 	for f, w := range l.logWorkers {
 		if w.ctx.Err() != nil {
+			w.span.End()
 			delete(l.logWorkers, f)
 		}
 	}
@@ -124,12 +123,20 @@ func (l *Logger) RunLogJob(log *LogJob) error {
 	}
 
 	ctx, cancel := context.WithCancel(l.ctx)
+	ctxp, span := l.tracer.Start(ctx, log.Name)
+	span.SetAttributes(attribute.Key("node").String(log.Node))
+	span.SetAttributes(attribute.Key("pod").String(log.Pod))
+	span.SetAttributes(attribute.Key("traceJob").String(log.Job))
+	span.SetAttributes(attribute.Key("traceSession").String(log.Session))
+
 	l.logWorkers[log.File] = &logWorker{
 		log:    log,
 		cancel: cancel,
-		ctx:    ctx,
+		ctx:    ctxp,
+		span:   span,
 	}
 
+	span.AddEvent(log.Name)
 	go l.readFile(l.logWorkers[log.File])
 
 	return nil
