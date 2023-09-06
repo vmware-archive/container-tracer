@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	jaegerDefaultService = "jaeger-collector"
+	jaegerDefaultService = "jaeger-collector-headless"
 	jaegerDefaultPort    = int32(14268)
 	jaegerDefaultRoute   = "api/traces"
 )
@@ -43,7 +43,7 @@ func jaegerAutoDetect(ctx context.Context) (*string, error) {
 					if p.Port != jaegerDefaultPort {
 						continue
 					}
-					url := fmt.Sprintf("http://%s:%d/%s", jaegerDefaultService, p.Port, jaegerDefaultRoute)
+					url := fmt.Sprintf("http://%s.%s.svc.cluster.local:%d/%s", e.Name, e.Namespace, p.Port, jaegerDefaultRoute)
 					return &url, nil
 				}
 			}
