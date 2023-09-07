@@ -10,6 +10,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -45,6 +46,7 @@ type logWorker struct {
 	span   logger.Span
 	ctx    context.Context
 	cancel context.CancelFunc
+	count  int
 }
 
 type Logger struct {
@@ -102,6 +104,7 @@ func (l *Logger) readFile(job *logWorker) error {
 			_, sp := l.tracer.Start(job.ctx, "trace")
 			sp.AddEvent(string(*line))
 			sp.End()
+			job.count++
 		}
 	}
 	return fmt.Errorf("Completed reading file", job.log.File)
@@ -111,6 +114,7 @@ func (l *Logger) delCompleted() {
 	for f, w := range l.logWorkers {
 		if w.ctx.Err() != nil {
 			w.span.End()
+			log.Printf("Completed trace job %s: %d traces collected", w.log.Name, w.count)
 			delete(l.logWorkers, f)
 		}
 	}
